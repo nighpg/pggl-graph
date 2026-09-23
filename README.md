@@ -6,9 +6,13 @@ with Minigraph-Cactus. It runs once per pangenome release, whereas pggl-workflow
 runs once per sample. The two differ in how often they change, in the compute
 they need and in their container images, so they live in separate repositories.
 
-> **Status:** the manifest, the validator and stages [D]-[E] work, and the toy
-> release in [`tests/toy/`](tests/toy/README.md) builds end to end and passes
-> validation. The staged Cactus jobs ([A]-[C]) are next. The design is in
+> **Status:** a release builds end to end on one node, offline:
+> `sbatch/build-release.sbatch` runs `cactus-pangenome --mgSplit`, then the vg
+> 1.70 indexes, the manifest and the validation. The toy release in
+> [`tests/toy/`](tests/toy/README.md) is built by the same script and passes.
+> The procedure for the air-gapped build site, from collecting the software to
+> bringing a release back, is [`docs/OFFLINE.md`](docs/OFFLINE.md). Multi-node
+> staged jobs ([A]-[C] as Slurm arrays) are next. The design is in
 > [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## What a release must satisfy

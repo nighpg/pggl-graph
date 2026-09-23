@@ -96,10 +96,13 @@ independently for each chromosome.
                            validate-graph.sh, write graph.manifest.json
 ```
 
-Status: [D] and [E] are implemented, and `scripts/index-release.sh` runs them
-on one host (the toy, and small builds). [A]-[C] still run as the all-in-one
-`cactus-pangenome --mgSplit` in `tests/toy/build.sh`. The staged sbatch and CWL
-versions are next, and they must reproduce `tests/toy/expected/`.
+Status: `scripts/build-release.sh` (`sbatch/build-release.sbatch`) builds a
+release on one node. It runs [A]-[C] as the all-in-one `cactus-pangenome
+--mgSplit`, restartable from its Toil job store, and [D]-[E] with
+`scripts/index-release.sh`. `scripts/check-seqfile.py` refuses a seqfile whose
+first entry is not GRCh38 before any compute is spent. The toy is built by the
+same script. The staged multi-node version ([A]-[C] as Slurm arrays) is next,
+and it must reproduce `tests/toy/expected/`.
 
 - Each task in [B] runs Toil with `--batchSystem single_machine`, with the
   jobStore and `--workDir` on `/scratch` and `--binariesMode local`. This
