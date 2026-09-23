@@ -153,10 +153,22 @@ For scale, JaSaPaGe (134 haplotypes) produced `chr1.hal` 10 GB and `chr1.vg`
 
 - **Reference:** `--reference GRCh38` and nothing else. The GRCh38 input is the
   25 primary contigs (chr1-22, X, Y, M) of
-  `GRCh38_full_analysis_set_plus_decoy_hla.fa`. This keeps the path count at
-  25, and it keeps the sequence (PAR masking included) md5-identical to the
-  FASTA the CRAMs were encoded against, so `ref` extracted from the graph can
-  decode them.
+  `GRCh38_full_analysis_set_plus_decoy_hla.fa`, with no decoy, alt, HLA or EBV
+  contigs, so the graph has exactly 25 GRCh38 paths. Their sequences
+  (PAR masking included) are M5-identical to that FASTA.
+- **`ref` for CRAM input is the full FASTA, not the graph's.** pggl-workflow
+  decodes CRAMs with its `ref` input, and htslib needs every contig a CRAM has
+  reads on. A WGS CRAM against the analysis set has reads on decoys and HLA.
+  Tested: with a two-contig CRAM and only the primary contig available, the
+  decode stops at the first decoy slice ("Unable to fetch reference",
+  exit 1). It succeeds only when htslib finds the full FASTA through the `UR:`
+  path in the CRAM header, which will not exist on another site. The
+  release's `ref.fa` (25 contigs) therefore serves FASTQ and BAM input. For
+  CRAM input, the full analysis set goes in as `ref`: its 25 reference contigs
+  are M5-identical to the graph's, and DeepVariant is indifferent to the
+  extra contigs (the JaSaPaGe runs used it that way).
+  `manifest.py job --cram-reference` checks a FASTA against the M5 sums in the
+  release's PanSN `.dict` before emitting it as `ref`.
 - **CHM13v2** goes in as an ordinary haplotype sample, not a second reference.
   `reference_samples` then contains GRCh38 alone, and `vg call -S` has nothing
   to choose between.

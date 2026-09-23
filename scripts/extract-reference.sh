@@ -3,8 +3,7 @@
 # Extracts the reference from the graph itself, rather than trusting an
 # external FASTA to agree with it, and writes pggl-workflow's ref (+ .fai,
 # .dict) and ref_paths (the PanSN .dict). With the source FASTA given, every
-# contig is checked to be md5-identical to it, which is what keeps CRAMs
-# encoded against the source decodable (see reference_files.py).
+# contig is checked to be md5-identical to it (see reference_files.py).
 #
 # Usage: extract-reference.sh <gbz> <ref_sample> <path_prefix> <outprefix> [source.fa[.gz]]
 set -euo pipefail

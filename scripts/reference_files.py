@@ -15,10 +15,16 @@ Contigs keep the source FASTA's order when one is given (so chr1..chr22, X, Y,
 M rather than whatever order the graph stores), the graph's order otherwise.
 
 With a source FASTA, every graph contig must be in it with the same M5 (md5
-of the upper-cased sequence, as in a sequence dictionary and in CRAM). That is
-what lets a CRAM encoded against the source be decoded with <outprefix>.fa.
-The source may hold more contigs (decoys, alts); those are listed, not errors.
+of the upper-cased sequence, as in a sequence dictionary and in CRAM). The
+source may hold more contigs (decoys, alts); those are listed, not errors.
 Exit 1 on any mismatch.
+
+The M5 sums also go into both .dict files. That is what lets a FASTA that
+holds more than the reference contigs -- the full analysis set the CRAMs were
+encoded against -- be checked and used as pggl-workflow's ref for CRAM input
+(manifest.py job --cram-reference). <outprefix>.fa itself cannot decode a CRAM
+that has reads on decoy, HLA or alt contigs: htslib needs every contig a CRAM
+refers to.
 """
 import gzip
 import hashlib

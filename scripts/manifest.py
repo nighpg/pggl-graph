@@ -12,8 +12,14 @@
       exit 3 when the release breaks it (the same code vg-call-sv.sh uses for a
       fragmented reference).
 
-  manifest.py job    <manifest> --site S
-      Print the pggl-workflow inputs for this release as a CWL job fragment.
+  manifest.py job    <manifest> --site S [--cram-reference FASTA]
+      Print the pggl-workflow inputs for this release as a CWL job fragment
+      (JSON on stdout, notes on stderr). `ref` is the release's own 25-contig
+      reference, which serves FASTQ and BAM input. pggl-workflow also decodes
+      CRAMs with `ref`, and a CRAM needs every contig it has reads on (decoys,
+      HLA, alts). For CRAM input, give the FASTA the CRAMs were encoded
+      against as --cram-reference; its 25 reference contigs are checked
+      against the M5 sums in the release's PanSN .dict before it is used.
 
   manifest.py resolve <manifest> --site S
       Print shell assignments (for eval) of everything validate-graph.sh needs.
@@ -223,17 +229,49 @@ def cmd_job(a):
     if "call_sv" in roles:
         job["snarls"] = f(m["graphs"][roles["call_sv"]]["snarls"])
     ref = m["reference"]
-    if ref.get("fasta"):
+    if a.cram_reference:
+        check_cram_reference(resolve(m, a.site, ref["pansn_dict"]), ref["path_prefix"],
+                             a.cram_reference)
+        job["ref"] = {"class": "File", "path": os.path.abspath(a.cram_reference)}
+    elif ref.get("fasta"):
         job["ref"] = f(ref["fasta"])
     job["ref_paths"] = f(ref["pansn_dict"])
     job["ref_path_prefix"] = ref["path_prefix"]
-    print("# pggl-workflow inputs from %s %s (site %s)" % (m["name"], m["release"], a.site))
+    note = lambda s: print("# " + s, file=sys.stderr)
+    note("pggl-workflow inputs from %s %s (site %s)" % (m["name"], m["release"], a.site))
+    if not a.cram_reference:
+        note("ref is the release's %d-contig reference: right for FASTQ and BAM input. For CRAM "
+             "input use --cram-reference <the FASTA the CRAMs were encoded against>." % ref["contigs"])
     if "haplotype_sampling" in roles:
         g = m["graphs"][roles["haplotype_sampling"]]
-        print("# haplotype-sample.cwl: gbz=%s hapl=%s"
-              % (resolve(m, a.site, g["gbz"]), resolve(m, a.site, g["hapl"])))
+        note("haplotype-sample.cwl: gbz=%s hapl=%s"
+             % (resolve(m, a.site, g["gbz"]), resolve(m, a.site, g["hapl"])))
     json.dump(job, sys.stdout, indent=2)
     print()
+
+
+def check_cram_reference(pansn_dict, prefix, fasta):
+    """Every contig of the release's reference must be in `fasta` with the M5
+    the release's .dict records. Other contigs (decoys, HLA) are what the
+    FASTA is for, and are ignored."""
+    want = {}
+    for line in open(pansn_dict):
+        if line.startswith("@SQ"):
+            t = dict(x.split(":", 1) for x in line.rstrip("\n").split("\t")[1:])
+            if "M5" not in t:
+                sys.exit("%s has no M5 tags, so %s cannot be checked against it" % (pansn_dict, fasta))
+            want[t["SN"][len(prefix):]] = t["M5"]
+    sys.path.insert(0, HERE)
+    from reference_files import read_fasta, m5
+    got = {}
+    for name, seq in read_fasta(fasta):
+        if name in want:
+            got[name] = m5(seq)
+    bad = [c for c in want if got.get(c) != want[c]]
+    if bad:
+        sys.exit("%s does not match the release on %s (missing, or a different sequence)"
+                 % (fasta, ", ".join(bad)))
+    print("# %s: all %d reference contigs match the release" % (fasta, len(want)), file=sys.stderr)
 
 
 def cmd_resolve(a):
@@ -305,6 +343,7 @@ def main():
     j = sub.add_parser("job")
     j.add_argument("manifest")
     j.add_argument("--site", required=True)
+    j.add_argument("--cram-reference")
     j.set_defaults(func=cmd_job)
 
     r = sub.add_parser("resolve")

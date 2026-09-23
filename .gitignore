@@ -23,3 +23,6 @@ jobstore/
 *.hapl
 *.snarls
 !tests/toy/expected/**
+# python bytecode
+__pycache__/
+*.pyc

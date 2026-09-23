@@ -53,7 +53,7 @@ These correspond to pggl-workflow's input names:
 | `gbz`, `dist`, `min`, `zipcodes` | `vg giraffe` | filter graph |
 | `snarls` | `call_sv` (`vg pack` + `vg call`) | the graph being genotyped |
 | `ri`, `hapl` | haplotype sampling | clip graph |
-| `ref` (+ `.fai`, `.dict`) | DeepVariant, surject | `vg paths -S GRCh38 -F`, checked by md5 against the linear FASTA |
+| `ref` (+ `.fai`, `.dict`) | DeepVariant; decoding CRAM input | `vg paths -S GRCh38 -F`, checked by M5 against the linear FASTA: 25 contigs, which serves FASTQ/BAM input. For CRAM input, `ref` must be the full FASTA the CRAMs were encoded against (decoys, HLA), whose 25 contigs match (`manifest.py job --cram-reference`) |
 | `ref_paths` | surject | PanSN `.dict` |
 | `ref_path_prefix` | — | `"GRCh38#0#"` |
 

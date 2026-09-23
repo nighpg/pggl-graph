@@ -70,11 +70,12 @@ offline-bundle/
   (`.hapl` v4, GBZ v2).
 - **GRCh38.primary.fa** is the 25 primary contigs (chr1-22, X, Y, M) of the
   analysis set, sequences untouched (`scripts/grch38-primary.py`). It becomes
-  the reference of the graph. Without the decoys, alts and HLA, GRCh38 stays
-  at 25 paths. With untouched sequences, the reference extracted from the
-  graph is M5-identical to the FASTA the CRAMs were encoded against, so it
-  decodes them. Without `--grch38` the script downloads the analysis set from
-  1000 Genomes.
+  the reference of the graph. Decoys, alts, HLA and EBV are left out, so
+  GRCh38 stays at 25 paths. The sequences are untouched, so the reference
+  extracted from the graph is M5-identical to the analysis set on those 25
+  contigs. The full analysis set is not needed on the build site. It is
+  needed where pggl-workflow decodes CRAMs (step 7). Without `--grch38` the
+  script downloads the analysis set from 1000 Genomes.
 - `--split 20G` splits the `.tar` for media with a file size limit. Downloads
   and `apptainer pull` retry on transient errors (`scripts/lib/retry.sh`).
 
@@ -262,7 +263,21 @@ Check it where it now lives, commit the manifest to this repository as
 
 ```bash
 python3 scripts/manifest.py check releases/<name>/graph.manifest.json --site nig-lustre --md5 --contract
-python3 scripts/manifest.py job releases/<name>/graph.manifest.json --site nig-lustre
+python3 scripts/manifest.py job releases/<name>/graph.manifest.json --site nig-lustre > <name>.inputs.json
+```
+
+The `ref` in that output is the release's own 25-contig reference. It is
+right for FASTQ and BAM input, but **not for CRAM input**. pggl-workflow
+decodes CRAMs with `ref`, and a CRAM against the analysis set has reads on
+decoy and HLA contigs that the 25-contig reference lacks. The decode stops
+there, unless htslib happens to find the original FASTA through the CRAM
+header's `UR:` path. For CRAMs, pass the FASTA they were encoded against. Its
+25 reference contigs are checked against the release before it is used:
+
+```bash
+python3 scripts/manifest.py job releases/<name>/graph.manifest.json --site nig-lustre \
+    --cram-reference /lustre9/open/shared_data/public-human-genomes/GRCh38/fasta/GRCh38_full_analysis_set_plus_decoy_hla.fa \
+    > <name>.cram-inputs.json
 ```
 
 ## When something fails

@@ -4,11 +4,13 @@ X, Y, M) of a full GRCh38 FASTA, sequences untouched.
 
   grch38-primary.py <GRCh38 FASTA[.gz]> <out.fa>
 
-Taking them from GRCh38_full_analysis_set_plus_decoy_hla.fa (the FASTA the
-CRAMs are encoded against) keeps the graph's reference md5-identical to it,
-PAR masking included, so the ref extracted from the graph decodes those CRAMs.
-The decoys, alts and HLA contigs are left out: in the seqfile they would become
-extra GRCh38 paths. Contigs are written in the source's order, 60 bases per
+The decoys, alts, HLA and EBV contigs do not belong in the graph: in the
+seqfile they would become extra GRCh38 paths. The 25 are taken from
+GRCh38_full_analysis_set_plus_decoy_hla.fa (the FASTA the CRAMs are encoded
+against), which keeps them M5-identical to it, PAR masking included. That full
+FASTA can then stand in for the graph's reference wherever more contigs are
+needed, which is the case for decoding a CRAM (see manifest.py job
+--cram-reference). Contigs are written in the source's order, 60 bases per
 line, and a line per contig with its length and M5 goes to stderr.
 
 Exit 1 when any of the 25 is missing.
