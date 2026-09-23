@@ -228,12 +228,49 @@
     "The shipped JaSaPaGe.hapl is format 4, which vg 1.70 rejects; graphs.clip.hapl is a local rebuild."
   ],
   "validation": {
-    "status": "not_run",
-    "date": null,
-    "validator": null,
-    "vg_version": null,
-    "graph": null,
-    "checks": [],
+    "status": "fail",
+    "date": "2026-09-24",
+    "validator": "scripts/validate-graph.sh @ pggl-graph 052d069",
+    "vg_version": "v1.70.0",
+    "graph": "clip",
+    "checks": [
+      {
+        "id": "1/clip",
+        "name": "paths",
+        "status": "fail",
+        "detail": "166 GRCh38 paths (expected 25), 165 with fragment names such as GRCh38#0#chr1[585988]"
+      },
+      {
+        "id": "2/clip",
+        "name": "lengths",
+        "status": "fail",
+        "detail": "1 of 25 contigs whole with matching length; chr1 only as 10 fragments covering 225687920 of 248956422 bp (90.7%); chr2 only as 14 fragments covering 237656815 of 242193529 bp (98.1%); chr3 only as 5 fragments covering 195267702 of 198295559 bp (98.5%); chr4 only as 8 fragments covering 187502991 of 190214555 bp (98.6%); chr5 only as 4 fragments covering 177632104 of 181538259 bp (97.8%); chr6 only as 5 fragments covering 168696208 of 170805979 bp (98.8%) (+18 more)"
+      },
+      {
+        "id": "3/clip",
+        "name": "tags",
+        "status": "pass",
+        "detail": "reference_samples = CHM13v2 GRCh38"
+      },
+      {
+        "id": "4/clip",
+        "name": "readable",
+        "status": "pass",
+        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; min MinimizerIndex v11; zipcodes ZipCodeCollection; ri R-index v1; hapl Haplotypes v5; snarls ok (34407591 records); hapl loads, but its per-contig statistics fail on the fragmented GRCh38"
+      },
+      {
+        "id": "5a",
+        "name": "surject",
+        "status": "pass",
+        "detail": "PanSN .dict: 25 @SQ, 1991/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length"
+      },
+      {
+        "id": "5b",
+        "name": "surject",
+        "status": "fail",
+        "detail": "plain path list: 1 @SQ, 0/2000 reads placed; 1 @SQ lines, expected 25; only 0 of 2000 reads placed on the reference"
+      }
+    ],
     "report": null
   }
 }
