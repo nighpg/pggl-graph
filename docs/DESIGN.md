@@ -8,9 +8,10 @@ one. Anything marked **open** has not been decided yet.
 | | Build site | Where JaSaPaGe was indexed |
 | --- | --- | --- |
 | Network | **air-gapped** | online |
-| Nodes | compute001-006, 128 CPU / 1031 GB each | various |
+| Slurm partition | `compute001-006` (6 nodes) | various |
+| Nodes | 128 CPU / 1031 GB each | various |
 | Node-local disk | `/scratch`, 1.5 TB SSD | small `/tmp` |
-| Shared filesystem | its own, **path open** | `/lustre10`, `/lustre9` |
+| Shared filesystem | `/home` | `/lustre10`, `/lustre9` |
 | Containers | apptainer | apptainer 1.4.5 |
 
 `/lustre10` is not visible from the build site. Consequences:
@@ -19,8 +20,10 @@ one. Anything marked **open** has not been decided yet.
   root per site, never a single absolute path.
 - Everything the build needs has to be carried in: the images, this repository
   and the input assemblies. See *Offline*.
-- The Slurm partition, the shared filesystem root and the scratch directory are
-  parameters of every sbatch job, not constants.
+- The Slurm partition (`compute001-006`), the shared filesystem root (under
+  `/home`) and the scratch directory (`/scratch`) are parameters of every
+  sbatch job, not constants: the defaults name the build site, and the toy
+  runs anywhere.
 
 ## Toolchain
 
