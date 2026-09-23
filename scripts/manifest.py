@@ -15,6 +15,12 @@
   manifest.py job    <manifest> --site S
       Print the pggl-workflow inputs for this release as a CWL job fragment.
 
+  manifest.py resolve <manifest> --site S
+      Print shell assignments (for eval) of everything validate-graph.sh needs.
+
+  manifest.py set-validation <manifest> <validation.json>
+      Replace the manifest's validation block with a validate-graph.sh result.
+
 Only the standard library is required. The schema is enforced with jsonschema
 when it is installed; the checks below the schema run either way.
 """
@@ -221,6 +227,46 @@ def cmd_job(a):
     print()
 
 
+def cmd_resolve(a):
+    import shlex
+    m = json.load(open(a.manifest))
+    if a.site not in m["sites"]:
+        sys.exit("site '%s' not in sites (%s)" % (a.site, ", ".join(m["sites"])))
+    ref = m["reference"]
+    out = [
+        ("NAME", m["name"]),
+        ("RELEASE", m["release"]),
+        ("REF_SAMPLE", ref["sample"]),
+        ("REF_PREFIX", ref["path_prefix"]),
+        ("REF_CONTIGS", str(ref["contigs"])),
+        ("PANSN_DICT", resolve(m, a.site, ref["pansn_dict"])),
+        ("FAI", resolve(m, a.site, ref["fai"]) if ref.get("fai") else ""),
+        ("GRAPHS", " ".join(sorted(m["graphs"]))),
+        ("GIRAFFE_GRAPH", m["roles"].get("giraffe", "")),
+        ("INDEX_VG", m["index_builder"]["vg_version"]),
+        ("ROOT_DIRS", ",".join(sorted(set(m["sites"][a.site]["roots"].values())))),
+    ]
+    for g, files in sorted(m["graphs"].items()):
+        for k in INDEX_KEYS:
+            if files.get(k):
+                out.append(("G_%s_%s" % (g, k), resolve(m, a.site, files[k])))
+    for k, v in out:
+        print("%s=%s" % (k, shlex.quote(v)))
+
+
+def cmd_set_validation(a):
+    m = json.load(open(a.manifest))
+    v = json.load(open(a.validation))
+    m["validation"] = v
+    with open(a.manifest, "w") as f:
+        json.dump(m, f, indent=2)
+        f.write("\n")
+    errs = structural_errors(m)
+    for e in errs:
+        print("ERROR  " + e)
+    return 1 if errs else 0
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="cmd")
@@ -249,6 +295,16 @@ def main():
     j.add_argument("manifest")
     j.add_argument("--site", required=True)
     j.set_defaults(func=cmd_job)
+
+    r = sub.add_parser("resolve")
+    r.add_argument("manifest")
+    r.add_argument("--site", required=True)
+    r.set_defaults(func=cmd_resolve)
+
+    s = sub.add_parser("set-validation")
+    s.add_argument("manifest")
+    s.add_argument("validation")
+    s.set_defaults(func=cmd_set_validation)
 
     a = p.parse_args()
     if a.cmd == "entry" and a.version == "null":
