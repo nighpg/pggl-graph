@@ -117,10 +117,12 @@ versions are next, and they must reproduce `tests/toy/expected/`.
 
 The toy build records two facts that bear on this design:
 
-- The Cactus-derived files (GBZ, reference, clip indexes, snarls) are
-  byte-identical between runs at different core counts. The filter graph's
-  autoindex outputs (`dist`, `min`) are not, so a rebuild is judged by
+- The GBZs, reference files, `ri`, `hapl`, `zipcodes` and snarls are
+  byte-identical between runs, including one with networking disabled. The
+  distance indexes and `min` are not, so a rebuild is judged by
   `validate-graph.sh`, not by md5.
+- The build needs no network at all (`unshare -rn`, see
+  `tests/toy/README.md`).
 - Toil costs about 7 s per job even on the toy (about 300 jobs, 12-18
   minutes). That overhead does not matter at full scale, but it is why the
   toy is not a quick unit test.

@@ -49,12 +49,21 @@ five haplotypes.
 
 ## Reproducibility
 
-Two builds (at `--maxCores` 4 and 16) gave byte-identical Cactus-derived files:
-both GBZs, the reference files, the clip `dist`/`ri`/`hapl` and the snarls.
-The filter graph's `dist` and `min` differ from build to build, because vg
-autoindex is not deterministic across threads. The manifest's md5 sums
-therefore identify *these* files; they do not predict what a rebuild will
-produce. `validate-graph.sh` judges a rebuild by content.
+Three builds (at `--maxCores` 4 and 16, one of them with networking disabled)
+gave byte-identical GBZs, reference files, `ri`, `hapl`, `zipcodes` and snarls.
+The distance indexes of both graphs and the filter graph's `min` differ from
+build to build, because vg's index construction is not deterministic across
+threads. The manifest's md5 sums therefore identify *these* files; they do not
+predict what a rebuild will produce. `validate-graph.sh` judges a rebuild by
+content.
+
+## Offline
+
+The whole build runs without a network. `unshare -rn tests/toy/build.sh ...`
+(a user namespace with only a loopback interface) passes every check with
+Cactus in `--binariesMode local` and vg from the per-sample image; nothing is
+fetched. That run took 3 minutes against 12 for the same 332 Toil jobs online.
+The cause was not established: the Toil log shows no network waits.
 
 ## Rebuilding
 
