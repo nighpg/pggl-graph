@@ -1,0 +1,25 @@
+# container images (built or pulled locally, carried by the offline bundle)
+*.sif
+sif-stage/
+image/
+# offline bundle (created by scripts/fetch-offline-bundle.sh)
+offline-bundle/
+pggl-graph-offline-bundle-*.tar
+pggl-graph-offline-bundle-*.tar.sha256
+pggl-graph-offline-bundle-*.tar.part-*
+# build outputs never belong here: releases live on the shared filesystem and
+# only graph.manifest.json is committed
+/work/
+/out/
+jobstore/
+*.gbz
+*.gfa
+*.gfa.gz
+*.hal
+*.dist
+*.min
+*.zipcodes
+*.ri
+*.hapl
+*.snarls
+!tests/toy/expected/**

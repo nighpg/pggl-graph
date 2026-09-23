@@ -1,0 +1,757 @@
+usage: cactus-align [-h] [--config PATH] [--logCritical] [--logError]
+                    [--logWarning] [--logInfo] [--logDebug] [--logTrace]
+                    [--logOff]
+                    [--logLevel {Critical,Error,Warning,Info,Debug,Trace,critical,error,warning,info,debug,trace,CRITICAL,ERROR,WARNING,INFO,DEBUG,TRACE}]
+                    [--logFile LOGFILE] [--rotatingLogging] [--logColors BOOL]
+                    [--workDir PATH] [--coordinationDir PATH] [--noStdOutErr]
+                    [--stats] [--clean {always,onError,never,onSuccess}]
+                    [--cleanWorkDir {always,onError,never,onSuccess}]
+                    [--clusterStats [OPT_PATH]] [--restart]
+                    [--batchSystem {aws_batch,single_machine,grid_engine,lsf,mesos,slurm,torque,htcondor,kubernetes}]
+                    [--disableHotDeployment]
+                    [--disableAutoDeployment DISABLEAUTODEPLOYMENT]
+                    [--maxJobs MAX_JOBS] [--maxLocalJobs MAX_LOCAL_JOBS]
+                    [--manualMemArgs] [--runLocalJobsOnWorkers]
+                    [--coalesceStatusCalls]
+                    [--statePollingWait STATEPOLLINGWAIT]
+                    [--statePollingTimeout STATE_POLLING_TIMEOUT]
+                    [--batchLogsDir BATCH_LOGS_DIR] [--memoryIsProduct]
+                    [--awsBatchRegion AWS_BATCH_REGION]
+                    [--awsBatchQueue AWS_BATCH_QUEUE]
+                    [--awsBatchJobRoleArn AWS_BATCH_JOB_ROLE_ARN]
+                    [--scale SCALE] [--slurmAllocateMem SLURM_ALLOCATE_MEM]
+                    [--slurmDefaultAllMem SLURM_DEFAULT_ALL_MEM]
+                    [--slurmTime SLURM_TIME]
+                    [--slurmPartition SLURM_PARTITION] [--slurmQOS SLURM_QOS]
+                    [--slurmGPUPartition SLURM_GPU_PARTITION]
+                    [--slurmGPUQOS SLURM_GPU_QOS] [--slurmPE SLURM_PE]
+                    [--slurmArgs SLURM_ARGS] [--symlinkImports BOOL]
+                    [--moveOutputs BOOL] [--caching BOOL]
+                    [--symlinkJobStoreReads BOOL]
+                    [--provisioner {aws,gce,None}] [--nodeTypes NODETYPES]
+                    [--maxNodes INT[,INT...]] [--minNodes INT[,INT...]]
+                    [--targetTime INT] [--betaInertia FLOAT]
+                    [--scaleInterval INT] [--preemptibleCompensation FLOAT]
+                    [--nodeStorage INT]
+                    [--nodeStorageOverrides NODETYPE:NODESTORAGE[,NODETYPE:NODESTORAGE...]]
+                    [--metrics BOOL] [--assumeZeroOverhead BOOL]
+                    [--maxServiceJobs INT] [--maxPreemptibleServiceJobs INT]
+                    [--deadlockWait INT] [--deadlockCheckInterval INT]
+                    [--defaultMemory DEFAULTMEMORY] [--defaultCores FLOAT]
+                    [--defaultDisk INT]
+                    [--defaultAccelerators ACCELERATOR[,ACCELERATOR...]]
+                    [--defaultPreemptible [BOOL]] [--maxCores INT]
+                    [--maxMemory INT] [--maxDisk INT] [--retryCount INT]
+                    [--retryBackoffSeconds FLOAT] [--retryBackoffFactor FLOAT]
+                    [--stopOnFirstFailure BOOL]
+                    [--enableUnlimitedPreemptibleRetries BOOL]
+                    [--doubleMem BOOL] [--maxJobDuration INT]
+                    [--rescueJobsFrequency INT] [--jobStoreTimeout FLOAT]
+                    [--maxLogFileSize MAXLOGFILESIZE] [--writeLogs [OPT_PATH]]
+                    [--writeLogsGzip [OPT_PATH]] [--writeLogsFromAllJobs BOOL]
+                    [--writeMessages PATH] [--realTimeLogging BOOL]
+                    [--disableChaining BOOL]
+                    [--disableJobStoreChecksumVerification BOOL]
+                    [--sseKey PATH] [--setEnv NAME=VALUE or NAME]
+                    [--servicePollingInterval FLOAT]
+                    [--forceDockerAppliance BOOL] [--statusWait INT]
+                    [--disableProgress]
+                    [--publishWorkflowMetrics {all,current,no}]
+                    [--debugWorker] [--disableWorkerOutputCapture]
+                    [--badWorker FLOAT] [--badWorkerFailInterval FLOAT]
+                    [--runImportsOnWorkers]
+                    [--importWorkersBatchSize IMPORT_WORKERS_BATCHSIZE]
+                    [--importWorkersDisk IMPORT_WORKERS_DISK]
+                    [--pathOverrides [PATHOVERRIDES ...]]
+                    [--pathOverrideNames [PATHOVERRIDENAMES ...]]
+                    [--pangenome] [--collapse] [--scoresFile SCORESFILE]
+                    [--scoresFromChromfile]
+                    [--singleCopySpecies SINGLECOPYSPECIES]
+                    [--barMaskFilter BARMASKFILTER]
+                    [--pafMaskFilter PAFMASKFILTER] [--maxLen MAXLEN]
+                    [--outVG] [--outGFA] [--batch]
+                    [--reference REFERENCE [REFERENCE ...]]
+                    [--configFile CONFIGFILE] [--root ROOT] [--includeRoot]
+                    [--latest] [--containerImage CONTAINERIMAGE]
+                    [--binariesMode {docker,local,singularity}]
+                    [--consCores CONSCORES] [--consMemory CONSMEMORY]
+                    [--chromInfo CHROMINFO] [--branchScale BRANCHSCALE]
+                    [--hdf5Codec {deflate,lz4,zstd,none}]
+                    jobStore seqFile [pafFile] outHal
+
+positional arguments:
+  seqFile               Seq file (or chromfile with --batch)
+  pafFile               Pairiwse aliginments (from cactus-blast, cactus-refmap
+                        or cactus-graphmap) (default: )
+  outHal                Output HAL file (or directory in --batch mode)
+
+options:
+  -h, --help            show this help message and exit
+  --runImportsOnWorkers
+                        Run the file imports on a worker instead of the
+                        leader. This is useful if the leader is not optimized
+                        for high network performance. If set to true, the
+                        argument --importWorkersDisk must also be set.
+                        (default: False)
+  --importWorkersBatchSize IMPORT_WORKERS_BATCHSIZE
+                        Specify the target total file size for file import
+                        batches. As many files as can fit will go into each
+                        batch import job. This should be set in conjunction
+                        with the argument --runImportsOnWorkers. (default: 1
+                        GiB)
+  --importWorkersDisk IMPORT_WORKERS_DISK
+                        Specify the disk size each import worker will get.
+                        This usually will not need to be set as Toil will
+                        attempt to use file streaming when downloading files.
+                        If not possible, for example, when downloading from
+                        AWS to a GCE job store, this should be set to the
+                        largest file size of all files to import. This should
+                        be set in conjunction with the arguments
+                        --runImportsOnWorkers and --importWorkersBatchSize.
+                        (default: 1 MiB)
+  --pathOverrides [PATHOVERRIDES ...]
+                        paths (multiple allowd) to override from seqFile
+                        (default: None)
+  --pathOverrideNames [PATHOVERRIDENAMES ...]
+                        names (must be same number as --paths) of path
+                        overrides (default: None)
+  --pangenome           Activate pangenome mode (suitable for star trees of
+                        closely related samples) by overriding several
+                        configuration settings. The overridden configuration
+                        will be saved in <outHal>.pg-conf.xml (default: False)
+  --collapse            Incorporate minimap2 self-alignments. (default: False)
+  --scoresFile SCORESFILE
+                        File containing scoring parameters (output of last-
+                        train / cactus-minigraphr --lastTrain) (default: None)
+  --scoresFromChromfile
+                        Load scoring parameters from the 4th column of
+                        chromfile (as made from cactus-minigraph --batch
+                        --lastTrain (default: False)
+  --singleCopySpecies SINGLECOPYSPECIES
+                        Filter out all self-alignments in given species
+                        (default: None)
+  --barMaskFilter BARMASKFILTER
+                        BAR's POA aligner will ignore softmasked regions
+                        greater than this length. (overrides
+                        partialOrderAlignmentMaskFilter in config) (default:
+                        None)
+  --pafMaskFilter PAFMASKFILTER
+                        softmasked (query) regions greather than this length
+                        will be removed from the input PAF before it is
+                        processed (default: None)
+  --maxLen MAXLEN       Only align up to this many bases (overrides <bar
+                        bandingLimit> and <caf maxRecoverableChainLength> in
+                        configuration) [default=10000 with --pangenome]
+                        (default: None)
+  --outVG               export pangenome graph in VG (.vg) in addition to HAL
+                        (default: False)
+  --outGFA              export pangenome grpah in GFA (.gfa.gz) in addition to
+                        HAL (default: False)
+  --batch               Launch batch of alignments. Input seqfile is expected
+                        to be chromfile as generated by cactus-graphmap-slit.
+                        IMPORTANT: paffile argument should bot be specified
+                        when using this option (default: False)
+  --reference REFERENCE [REFERENCE ...]
+                        Ensure that given genome is acyclic by deleting all
+                        paralogy edges in postprocessing, also do not mask its
+                        PAF mappings. If more than one specified, then only
+                        first is acyclic, but all will end up as reference-
+                        sense in the output vg (if --outVG specified)
+                        (default: None)
+  --configFile CONFIGFILE
+                        Specify cactus configuration file (default:
+                        /home/cactus/cactus_env/lib/python3.10/site-
+                        packages/cactus/cactus_progressive_config.xml)
+  --root ROOT           Name of ancestral node (which must appear in NEWICK
+                        tree in <seqfile>) to use as a root for the alignment.
+                        Any genomes not below this node in the tree may be
+                        used as outgroups but will never appear in the output.
+                        If no root is specifed then the root of the tree is
+                        used. (default: None)
+  --includeRoot         Include the root's sequence in the alignment (used
+                        only when running alignment update recipes) (default:
+                        False)
+  --latest              Use the latest version of the docker container rather
+                        than pulling one matching this version of cactus
+                        (default: False)
+  --containerImage CONTAINERIMAGE
+                        Use the the specified pre-built containter image
+                        rather than pulling one from quay.io (default: None)
+  --binariesMode {docker,local,singularity}
+                        The way to run the Cactus binaries (default: None)
+  --consCores CONSCORES
+                        Number of cores for each cactus_consolidated job
+                        (defaults to all available / maxCores on
+                        single_machine) (default: None)
+  --consMemory CONSMEMORY
+                        Memory in bytes for each cactus_consolidated job
+                        (defaults to an estimate based on the input data
+                        size). Standard suffixes like K, Ki, M, Mi, G or Gi
+                        are supported (default=bytes)) (default: None)
+  --chromInfo CHROMINFO
+                        Two-column file mapping genome (col 1) to comma-
+                        separated list of sex chromosomes. This information
+                        will be used to guide outgroup selection so that,
+                        where possible, all chromosomes are present in at
+                        least one outgroup. (default: None)
+  --branchScale BRANCHSCALE
+                        Scale branch lengths by this factor to adjust
+                        alignment sensitivity (e.g., 2.0 = treat branches as
+                        2x longer, more sensitive) (default: 1.0)
+  --hdf5Codec {deflate,lz4,zstd,none}
+                        HDF5 compression codec for HAL output (overrides
+                        config XML, default=deflate) (default: None)
+
+  --config PATH         Get options from a config file. (default: None)
+
+Logging Options:
+  --logCritical         Set logging level to Critical. Default: INFO.
+                        (default: INFO)
+  --logError            Set logging level to Error. Default: INFO. (default:
+                        INFO)
+  --logWarning          Set logging level to Warning. Default: INFO. (default:
+                        INFO)
+  --logInfo             Set logging level to Info. Default: INFO. (default:
+                        INFO)
+  --logDebug            Set logging level to Debug. Default: INFO. (default:
+                        INFO)
+  --logTrace            Set logging level to Trace. Default: INFO. (default:
+                        INFO)
+  --logOff              Same as --logCritical. (default: INFO)
+  --logLevel {Critical,Error,Warning,Info,Debug,Trace,critical,error,warning,info,debug,trace,CRITICAL,ERROR,WARNING,INFO,DEBUG,TRACE}
+                        Set the log level. Default: INFO. Options:
+                        ['Critical', 'Error', 'Warning', 'Info', 'Debug',
+                        'Trace', 'critical', 'error', 'warning', 'info',
+                        'debug', 'trace', 'CRITICAL', 'ERROR', 'WARNING',
+                        'INFO', 'DEBUG', 'TRACE']. (default: INFO)
+  --logFile LOGFILE     File to log in. (default: None)
+  --rotatingLogging     Turn on rotating logging, which prevents log files
+                        from getting too big. (default: False)
+  --logColors BOOL      Enable or disable colored logging. Default: True
+
+Toil core options:
+  Options to specify the location of the Toil workflow and turn on stats
+  collation about the performance of jobs.
+
+  jobStore              The location of the job store for the workflow. A job
+                        store holds persistent information about the jobs,
+                        stats, and files in a workflow. If the workflow is run
+                        with a distributed batch system, the job store must be
+                        accessible by all worker nodes. Depending on the
+                        desired job store implementation, the location should
+                        be formatted according to one of the following
+                        schemes: file:<path> where <path> points to a
+                        directory on the file system aws:<region>:<prefix>
+                        where <region> is the name of an AWS region like us-
+                        west-2 and <prefix> will be prepended to the names of
+                        any top-level AWS resources in use by job store, e.g.
+                        S3 buckets. google:<project_id>:<prefix> TODO: explain
+                        For backwards compatibility, you may also specify
+                        ./foo (equivalent to file:./foo or just file:foo) or
+                        /bar (equivalent to file:/bar).
+  --workDir PATH        Absolute path to directory where temporary files
+                        generated during the Toil run should be placed.
+                        Standard output and error from batch system jobs
+                        (unless --noStdOutErr is set) will be placed in this
+                        directory. A cache directory may be placed in this
+                        directory. Temp files and folders will be placed in a
+                        directory toil-<workflowID> within workDir. The
+                        workflowID is generated by Toil and will be reported
+                        in the workflow logs. Default is determined by the
+                        variables (TMPDIR, TEMP, TMP) via mkdtemp. This
+                        directory needs to exist on all machines running jobs;
+                        if capturing standard output and error from batch
+                        system jobs is desired, it will generally need to be
+                        on a shared file system. When sharing a cache between
+                        containers on a host, this directory must be shared
+                        between the containers. [env var: TOIL_WORKDIR]
+                        (default: None)
+  --coordinationDir PATH
+                        Absolute path to directory where Toil will keep state
+                        and lock files. When sharing a cache between
+                        containers on a host, this directory must be shared
+                        between the containers. [env var:
+                        TOIL_COORDINATION_DIR] (default: None)
+  --noStdOutErr         Do not capture standard output and error from batch
+                        system jobs. (default: False)
+  --stats               Keep statistics about the toil workflow to be used by
+                        'toil stats'. (default: False)
+  --clean {always,onError,never,onSuccess}
+                        Determines the deletion of the jobStore upon
+                        completion of the program. Choices: ['always',
+                        'onError', 'never', 'onSuccess']. The --stats option
+                        requires information from the jobStore upon completion
+                        so the jobStore will never be deleted with that flag.
+                        If you wish to be able to restart the run, choose
+                        'never' or 'onSuccess'. Default is 'never' if stats is
+                        enabled, and 'onSuccess' otherwise. (default:
+                        onSuccess)
+  --cleanWorkDir {always,onError,never,onSuccess}
+                        Determines deletion of temporary worker directory upon
+                        completion of a job. Choices: ['always', 'onError',
+                        'never', 'onSuccess']. Default = always. WARNING: This
+                        option should be changed for debugging only. Running a
+                        full pipeline with this option could fill your disk
+                        with excessive intermediate data. (default: always)
+  --clusterStats [OPT_PATH]
+                        If enabled, writes out JSON resource usage statistics
+                        to a file. The default location for this file is the
+                        current working directory, but an absolute path can
+                        also be passed to specify where this file should be
+                        written. This options only applies when using scalable
+                        batch systems. (default: None)
+
+Toil options for restarting an existing workflow:
+  Allows the restart of an existing workflow
+
+  --restart             If --restart is specified then will attempt to restart
+                        existing workflow at the location pointed to by the
+                        --jobStore option. Will raise an exception if the
+                        workflow does not exist (default: False)
+
+Toil options for specifying the batch system:
+  Allows the specification of the batch system.
+
+  --batchSystem {aws_batch,single_machine,grid_engine,lsf,mesos,slurm,torque,htcondor,kubernetes}
+                        The type of batch system to run the job(s) with,
+                        currently can be one of aws_batch, single_machine,
+                        grid_engine, lsf, mesos, slurm, torque, htcondor,
+                        kubernetes. Default = single_machine (default:
+                        single_machine)
+  --disableHotDeployment
+                        Hot-deployment was renamed to auto-deployment. Option
+                        now redirects to --disableAutoDeployment. Left in for
+                        backwards compatibility. (default: False)
+  --disableAutoDeployment DISABLEAUTODEPLOYMENT
+                        Should auto-deployment of Toil Python workflows be
+                        deactivated? If True, the workflow's Python code
+                        should be present at the same location on all workers.
+                        Default = False. (default: False)
+  --maxJobs MAX_JOBS    Specifies the maximum number of jobs to submit to the
+                        backing scheduler at once. Not supported on Mesos or
+                        AWS Batch. Use 0 for unlimited. Defaults to unlimited.
+                        (default: 9223372036854775807)
+  --maxLocalJobs MAX_LOCAL_JOBS
+                        Specifies the maximum number of housekeeping jobs to
+                        run sumultaneously on the local system. Use 0 for
+                        unlimited. Defaults to the number of local cores
+                        (192). (default: None)
+  --manualMemArgs       Do not add the default arguments: 'hv=MEMORY' &
+                        'h_vmem=MEMORY' to the qsub call, and instead rely on
+                        TOIL_GRIDGENGINE_ARGS to supply alternative arguments.
+                        Requires that TOIL_GRIDGENGINE_ARGS be set. (default:
+                        False)
+  --runLocalJobsOnWorkers, --runCwlInternalJobsOnWorkers
+                        Whether to run jobs marked as local (e.g. CWLScatter)
+                        on the worker nodes instead of the leader node. If
+                        false (default), then all such jobs are run on the
+                        leader node. Setting this to true can speed up CWL
+                        pipelines for very large workflows with many sub-
+                        workflows and/or scatters, provided that the worker
+                        pool is large enough. (default: False)
+  --coalesceStatusCalls
+                        Ask for job statuses from the batch system in a batch.
+                        Deprecated; now always enabled where supported.
+                        (default: True)
+  --statePollingWait STATEPOLLINGWAIT
+                        Time, in seconds, to wait before doing a scheduler
+                        query for job state. Return cached results if within
+                        the waiting period. Only works for grid engine batch
+                        systems such as gridengine, htcondor, torque, slurm,
+                        and lsf. (default: None)
+  --statePollingTimeout STATE_POLLING_TIMEOUT
+                        Time, in seconds, to retry against a broken scheduler.
+                        Only works for grid engine batch systems such as
+                        gridengine, htcondor, torque, slurm, and lsf.
+                        (default: 1200)
+  --batchLogsDir BATCH_LOGS_DIR
+                        Directory to tell the backing batch system to log
+                        into. Should be available on both the leader and the
+                        workers, if the backing batch system writes logs to
+                        the worker machines' filesystems, as many HPC
+                        schedulers do. If unset, the Toil work directory will
+                        be used. Only works for grid engine batch systems such
+                        as gridengine, htcondor, torque, slurm, and lsf. [env
+                        var: TOIL_BATCH_LOGS_DIR] (default: None)
+  --memoryIsProduct     If the batch system understands requested memory as a
+                        product of the requested memory and the numberof
+                        cores, set this flag to properly allocate memory.
+                        (default: False)
+  --awsBatchRegion AWS_BATCH_REGION
+                        The AWS region containing the AWS Batch queue to
+                        submit to. [env var: TOIL_AWS_REGION] (default: None)
+  --awsBatchQueue AWS_BATCH_QUEUE
+                        The name or ARN of the AWS Batch queue to submit to.
+                        [env var: TOIL_AWS_BATCH_QUEUE] (default: None)
+  --awsBatchJobRoleArn AWS_BATCH_JOB_ROLE_ARN
+                        The ARN of an IAM role to run AWS Batch jobs as, so
+                        they can e.g. access a job store. Must be assumable by
+                        ecs-tasks.amazonaws.com. [env var:
+                        TOIL_AWS_BATCH_JOB_ROLE_ARN] (default: None)
+  --scale SCALE         A scaling factor to change the value of all submitted
+                        tasks's submitted cores. Used in the single_machine
+                        batch system. Useful for running workflows on smaller
+                        machines than they were designed for, by setting a
+                        value less than 1. (default: 1)
+  --slurmAllocateMem SLURM_ALLOCATE_MEM
+                        If False, do not use --mem. Used as a workaround for
+                        Slurm clusters that reject jobs with memory
+                        allocations. [env var: TOIL_SLURM_ALLOCATE_MEM]
+                        (default: True)
+  --slurmDefaultAllMem SLURM_DEFAULT_ALL_MEM
+                        If True, assign Toil jobs without their own memory
+                        requirements all available memory on a Slurm node (via
+                        Slurm --mem=0). [env var: TOIL_SLURM_DEFAULT_ALL_MEM]
+                        (default: False)
+  --slurmTime SLURM_TIME
+                        Slurm job time limit, in [DD-]HH:MM:SS format. [env
+                        var: TOIL_SLURM_TIME] (default: None)
+  --slurmPartition SLURM_PARTITION
+                        Partition to send Slurm jobs to. [env var:
+                        TOIL_SLURM_PARTITION] (default: None)
+  --slurmQOS SLURM_QOS  Quality Of Service to request for Slurm jobs. [env
+                        var: TOIL_SLURM_QOS] (default: None)
+  --slurmGPUPartition SLURM_GPU_PARTITION
+                        Partition to send Slurm jobs to if they ask for GPUs.
+                        [env var: TOIL_SLURM_GPU_PARTITION] (default: None)
+  --slurmGPUQOS SLURM_GPU_QOS
+                        Quality Of Service to request for Slurm jobs if they
+                        ask for GPUs. [env var: TOIL_SLURM_GPU_QOS] (default:
+                        None)
+  --slurmPE SLURM_PE    Special partition to send Slurm jobs to if they ask
+                        for more than 1 CPU. [env var: TOIL_SLURM_PE]
+                        (default: None)
+  --slurmArgs SLURM_ARGS
+                        Extra arguments to pass to Slurm. [env var:
+                        TOIL_SLURM_ARGS] (default: )
+
+Toil options for configuring storage:
+  Allows configuring Toil's data storage.
+
+  --symlinkImports BOOL
+                        When using a filesystem based job store, CWL input
+                        files are by default symlinked in. Setting this option
+                        to True instead copies the files into the job store,
+                        which may protect them from being modified externally.
+                        When set to False, as long as caching is enabled, Toil
+                        will protect the file automatically by changing the
+                        permissions to read-only. default=True
+  --moveOutputs BOOL    Applies to filesystem-based job stores only. Setting
+                        this option to True moves output files to the output
+                        directory, and creates a symlink to the moved exported
+                        file at the initial location. Setting this option to
+                        False instead copies the files into the output
+                        directory. default=False
+  --caching BOOL        Enable or disable worker level file caching for your
+                        workflow, specifying this overrides default from batch
+                        system. Does not affect CWL or WDL task caching.
+                        (default: None)
+  --symlinkJobStoreReads BOOL
+                        Allow reads and container mounts from a JobStore's
+                        shared filesystem directly via symlink. default=True
+
+Toil options for autoscaling the cluster of worker nodes:
+  Allows the specification of the minimum and maximum number of nodes in an
+  autoscaled cluster, as well as parameters to control the level of
+  provisioning.
+
+  --provisioner {aws,gce,None}, -p {aws,gce,None}
+                        The provisioner for cluster auto-scaling. This is the
+                        main Toil '--provisioner' option, and defaults to None
+                        for running on single machine and non-auto-scaling
+                        batch systems. The currently supported choices are
+                        ['aws', 'gce', None]. The default is None.
+  --nodeTypes NODETYPES
+                        Specifies a list of comma-separated node types, each
+                        of which is composed of slash-separated instance
+                        types, and an optional spot bid set off by a colon,
+                        making the node type preemptible. Instance types may
+                        appear in multiple node types, and the same node type
+                        may appear as both preemptible and non-preemptible.
+                        Valid argument specifying two node types:
+                        c5.4xlarge/c5a.4xlarge:0.42,t2.large Node types:
+                        c5.4xlarge/c5a.4xlarge:0.42 and t2.large Instance
+                        types: c5.4xlarge, c5a.4xlarge, and t2.large
+                        Semantics: Bid $0.42/hour for either c5.4xlarge or
+                        c5a.4xlarge instances, treated interchangeably, while
+                        they are available at that price, and buy t2.large
+                        instances at full price. default=[]
+  --maxNodes INT[,INT...]
+                        Maximum number of nodes of each type in the cluster,
+                        if using autoscaling, provided as a comma-separated
+                        list. The first value is used as a default if the list
+                        length is less than the number of nodeTypes.
+                        default=[10]
+  --minNodes INT[,INT...]
+                        Mininum number of nodes of each type in the cluster,
+                        if using auto-scaling. This should be provided as a
+                        comma-separated list of the same length as the list of
+                        node types. default=[0]
+  --targetTime INT      Sets how rapidly you aim to complete jobs in seconds.
+                        Shorter times mean more aggressive parallelization.
+                        The autoscaler attempts to scale up/down so that it
+                        expects all queued jobs will complete within
+                        targetTime seconds. default=1800
+  --betaInertia FLOAT   A smoothing parameter to prevent unnecessary
+                        oscillations in the number of provisioned nodes. This
+                        controls an exponentially weighted moving average of
+                        the estimated number of nodes. A value of 0.0 disables
+                        any smoothing, and a value of 0.9 will smooth so much
+                        that few changes will ever be made. Must be between
+                        0.0 and 0.9. default=0.1
+  --scaleInterval INT   The interval (seconds) between assessing if the scale
+                        of the cluster needs to change. default=60
+  --preemptibleCompensation FLOAT, --preemptableCompensation FLOAT
+                        The preference of the autoscaler to replace
+                        preemptible nodes with non-preemptible nodes, when
+                        preemptible nodes cannot be started for some reason.
+                        This value must be between 0.0 and 1.0, inclusive. A
+                        value of 0.0 disables such compensation, a value of
+                        0.5 compensates two missing preemptible nodes with a
+                        non-preemptible one. A value of 1.0 replaces every
+                        missing pre-emptable node with a non-preemptible one.
+                        default=0.0
+  --nodeStorage INT     Specify the size of the root volume of worker nodes
+                        when they are launched in gigabytes. You may want to
+                        set this if your jobs require a lot of disk space.
+                        (default=50).
+  --nodeStorageOverrides NODETYPE:NODESTORAGE[,NODETYPE:NODESTORAGE...]
+                        Comma-separated list of nodeType:nodeStorage that are
+                        used to override the default value from --nodeStorage
+                        for the specified nodeType(s). This is useful for
+                        heterogeneous jobs where some tasks require much more
+                        disk than others. (default: [])
+  --metrics BOOL        Enable the prometheus/grafana dashboard for monitoring
+                        CPU/RAM usage, queue size, and issued jobs. (default:
+                        False)
+  --assumeZeroOverhead BOOL
+                        Ignore scheduler and OS overhead and assume jobs can
+                        use every last byte of memory and disk on a node when
+                        autoscaling. (default: False)
+
+Toil options for limiting the number of service jobs and detecting service deadlocks:
+  Allows the specification of the maximum number of service jobs in a
+  cluster. By keeping this limited we can avoid nodes occupied with services
+  causing deadlocks.
+
+  --maxServiceJobs INT  The maximum number of service jobs that can be run
+                        concurrently, excluding service jobs running on
+                        preemptible nodes. default=9223372036854775807
+  --maxPreemptibleServiceJobs INT
+                        The maximum number of service jobs that can run
+                        concurrently on preemptible nodes.
+                        default=9223372036854775807
+  --deadlockWait INT    Time, in seconds, to tolerate the workflow running
+                        only the same service jobs, with no jobs to use them,
+                        before declaring the workflow to be deadlocked and
+                        stopping. default=60
+  --deadlockCheckInterval INT
+                        Time, in seconds, to wait between checks to see if the
+                        workflow is stuck running only service jobs, with no
+                        jobs to use them. Should be shorter than
+                        --deadlockWait. May need to be increased if the batch
+                        system cannot enumerate running jobs quickly enough,
+                        or if polling for running jobs is placing an
+                        unacceptable load on a shared cluster.default=30
+
+Toil options for cores/memory requirements:
+  The options to specify default cores/memory requirements (if not specified
+  by the jobs themselves), and to limit the total amount of memory/cores
+  requested from the batch system.
+
+  --defaultMemory DEFAULTMEMORY
+                        The default amount of memory to request for a job.
+                        Only applicable to jobs that do not specify an
+                        explicit value for this requirement. Standard suffixes
+                        like K, Ki, M, Mi, G or Gi are supported. Default is
+                        2.0 Gi. (default: 2.0 Gi)
+  --defaultCores FLOAT  The default amount of cpu to request for a job. Only
+                        applicable to jobs that do not specify an explicit
+                        value for this requirement. Fractions of a core (for
+                        example 0.1) are supported on some batch systems
+                        [mesos, single_machine]. Default is 1. (default: 1)
+  --defaultDisk INT     The default amount of disk to request for a job. Only
+                        applicable to jobs that do not specify an explicit
+                        value for this requirement. Standard suffixes like K,
+                        Ki, M, Mi, G or Gi are supported. Default is 2.0 Gi.
+                        (default: 2.0 Gi)
+  --defaultAccelerators ACCELERATOR[,ACCELERATOR...]
+                        The default amount of accelerators to request for a
+                        job. Only applicable to jobs that do not specify an
+                        explicit value for this requirement. Each accelerator
+                        specification can have a type (gpu [default], nvidia,
+                        amd, cuda, rocm, opencl, or a specific model like
+                        nvidia-tesla-k80), and a count [default: 1]. If both a
+                        type and a count are used, they must be separated by a
+                        colon. If multiple types of accelerators are used, the
+                        specifications are separated by commas. Default is [].
+                        (default: [])
+  --defaultPreemptible [BOOL], --defaultPreemptable [BOOL]
+                        Make all jobs able to run on preemptible (spot) nodes
+                        by default. (default: False)
+  --maxCores INT        The max amount of cpu to request for a job. Only
+                        applicable to jobs that do not specify an explicit
+                        value for this requirement. Fractions of a core (for
+                        example 0.1) are supported on some batch systems
+                        [mesos, single_machine]. Default is
+                        9223372036854775807. (default: 9223372036854775807)
+  --maxMemory INT       The max amount of memory to request for a job. Only
+                        applicable to jobs that do not specify an explicit
+                        value for this requirement. Standard suffixes like K,
+                        Ki, M, Mi, G or Gi are supported. Default is 8.0 Ei.
+                        (default: 9223372036854775807)
+  --maxDisk INT         The max amount of disk to request for a job. Only
+                        applicable to jobs that do not specify an explicit
+                        value for this requirement. Standard suffixes like K,
+                        Ki, M, Mi, G or Gi are supported. Default is 8.0 Ei.
+                        (default: 9223372036854775807)
+
+Toil options for rescuing/killing/restarting jobs:
+  The options for jobs that either run too long/fail or get lost (some batch
+  systems have issues!).
+
+  --retryCount INT      Number of times to retry a failing job before giving
+                        up and labeling job failed. default=1 (default: 1)
+  --retryBackoffSeconds FLOAT
+                        Number of seconds to wait when first retrying a job.
+                        default=2 (default: 2)
+  --retryBackoffFactor FLOAT
+                        Factor to increase retry backof time by for each
+                        additional retry. default=3 (default: 3)
+  --stopOnFirstFailure BOOL
+                        Stop the workflow at the first complete job failure.
+                        (default: False)
+  --enableUnlimitedPreemptibleRetries BOOL, --enableUnlimitedPreemptableRetries BOOL
+                        If set, preemptible failures (or any failure due to an
+                        instance getting unexpectedly terminated) will not
+                        count towards job failures and --retryCount. (default:
+                        False)
+  --doubleMem BOOL      If set, batch jobs which die to reaching memory limit
+                        on batch schedulers will have their memory doubled and
+                        they will be retried. The remaining retry count will
+                        be reduced by 1. Currently supported by LSF. (default:
+                        False)
+  --maxJobDuration INT  Maximum runtime of a job (in seconds) before we kill
+                        it (this is a lower bound, and the actual time before
+                        killing the job may be longer).
+                        default=9223372036854775807
+  --rescueJobsFrequency INT
+                        Period of time to wait (in seconds) between checking
+                        for missing/overlong jobs, that is jobs which get lost
+                        by the batch system. Expert parameter. default=60
+  --jobStoreTimeout FLOAT
+                        Maximum time (in seconds) to wait for a job's update
+                        to the job store before declaring it failed.
+                        default=30
+
+Toil log management options:
+  Options for how Toil should manage its logs.
+
+  --maxLogFileSize MAXLOGFILESIZE
+                        The maximum size of a job log file to keep (in bytes),
+                        log files larger than this will be truncated to the
+                        last X bytes. Setting this option to zero will prevent
+                        any truncation. Setting this option to a negative
+                        value will truncate from the beginning. Default=100.0
+                        Mi (default: 104857600)
+  --writeLogs [OPT_PATH]
+                        Write worker logs received by the leader into their
+                        own files at the specified path. Any non-empty
+                        standard output and error from failed batch system
+                        jobs will also be written into files at this path. The
+                        current working directory will be used if a path is
+                        not specified explicitly. Note: By default only the
+                        logs of failed jobs are returned to leader. Set log
+                        level to 'debug' or enable '--writeLogsFromAllJobs' to
+                        get logs back from successful jobs, and adjust
+                        'maxLogFileSize' to control the truncation limit for
+                        worker logs. (default: None)
+  --writeLogsGzip [OPT_PATH]
+                        Identical to --writeLogs except the logs files are
+                        gzipped on the leader. (default: None)
+  --writeLogsFromAllJobs BOOL
+                        Whether to write logs from all jobs (including the
+                        successful ones) without necessarily setting the log
+                        level to 'debug'. Ensure that either --writeLogs or
+                        --writeLogsGzip is set if enabling this option.
+                        (default: False)
+  --writeMessages PATH  File to send messages from the leader's message bus
+                        to. (default: None)
+  --realTimeLogging BOOL
+                        Enable real-time logging from workers to leader
+                        (default: False)
+
+Toil miscellaneous options:
+  Everything else.
+
+  --disableChaining BOOL
+                        Disables chaining of jobs (chaining uses one job's
+                        resource allocation for its successor job if
+                        possible). (default: False)
+  --disableJobStoreChecksumVerification BOOL
+                        Disables checksum verification for files transferred
+                        to/from the job store. Checksum verification is a
+                        safety check to ensure the data is not corrupted
+                        during transfer. Currently only supported for non-
+                        streaming AWS files. (default: False)
+  --sseKey PATH         Path to file containing 32 character key to be used
+                        for server-side encryption on awsJobStore or
+                        googleJobStore. SSE will not be used if this flag is
+                        not passed. (default: None)
+  --setEnv NAME=VALUE or NAME, -e NAME=VALUE or NAME
+                        Set an environment variable early on in the worker. If
+                        VALUE is null, it will be looked up in the current
+                        environment. Independently of this option, the worker
+                        will try to emulate the leader's environment before
+                        running a job, except for some variables known to vary
+                        across systems. Using this option, a variable can be
+                        injected into the worker process itself before it is
+                        started. (default: {})
+  --servicePollingInterval FLOAT
+                        Interval of time service jobs wait between polling for
+                        the existence of the keep-alive flag. Default: 60.0
+                        (default: 60.0)
+  --forceDockerAppliance BOOL
+                        Disables sanity checking the existence of the docker
+                        image specified by TOIL_APPLIANCE_SELF, which Toil
+                        uses to provision mesos for autoscaling. (default:
+                        False)
+  --statusWait INT      Seconds to wait between reports of running jobs.
+                        (default: 3600)
+  --disableProgress     Disables the progress bar shown when standard error is
+                        a terminal. (default: False)
+  --publishWorkflowMetrics {all,current,no}
+                        Whether to publish workflow metrics reports (including
+                        unique workflow and task run IDs, job names, and
+                        version and Toil feature use information) to Dockstore
+                        when a workflow completes. Selecting "current" will
+                        publish metrics for the current workflow. Selecting
+                        "all" will also publish prior workflow runs from the
+                        Toil history database, even if they themselves were
+                        run with "no". Note that once published, workflow
+                        metrics CANNOT be deleted or un-published; they will
+                        stay published forever! (default: None)
+
+Toil debug options:
+  Debug options for finding problems or helping with testing.
+
+  --debugWorker         Experimental no forking mode for local debugging.
+                        Specifically, workers are not forked and stderr/stdout
+                        are not redirected to the log. (default: False)
+  --disableWorkerOutputCapture
+                        Let worker output go to worker's standard out/error
+                        instead of per-job logs. (default: False)
+  --badWorker FLOAT     For testing purposes randomly kill --badWorker
+                        proportion of jobs using SIGKILL. default=0.0
+                        (default: 0.0)
+  --badWorkerFailInterval FLOAT
+                        When killing the job pick uniformly within the
+                        interval from 0.0 to --badWorkerFailInterval seconds
+                        after the worker starts. default=0.01 (default: 0.01)
+
+Args that start with '--' can also be set in a config file
+(/home/ykawai/.toil/default.yaml or specified via --config). The config file
+uses YAML syntax and must represent a YAML 'mapping' (for details, see
+http://learn.getgrav.org/advanced/yaml). In general, command-line values
+override environment variables which override config file values which
+override defaults.

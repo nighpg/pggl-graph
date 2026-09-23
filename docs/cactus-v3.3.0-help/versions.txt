@@ -1,0 +1,30 @@
+image     docker://quay.io/comparative-genomics-toolkit/cactus:v3.3.0
+sif       cactus_v3.3.0.sif sha256:9369ee9abc5e9756dd14b358f68a0221f3058ef3d5984627e8d08c45e162beef (apptainer 1.4.5 pull, 2026-09-23)
+cactus    3.3.0
+toil      9.5.0
+vg        vg version v1.76.1-89-gf2ed0bbd4 "Chomper"
+minigraph 0.21-r606
+
+cactus-* entry points:
+  cactus-align
+  cactus-align-batch
+  cactus-blast
+  cactus-graphmap
+  cactus-graphmap-join
+  cactus-graphmap-split
+  cactus-hal2chains
+  cactus-hal2fasta
+  cactus-hal2maf
+  cactus-hal2seqfile
+  cactus-halAppendSubtrees
+  cactus-maf2bigmaf
+  cactus-minigraph
+  cactus-pangenome
+  cactus-panpatch
+  cactus-phast
+  cactus-prepare
+  cactus-prepare-toil
+  cactus-preprocess
+  cactus-refmap
+  cactus-terra-helper
+  cactus-update-prepare
