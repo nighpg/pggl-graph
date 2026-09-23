@@ -11,7 +11,12 @@
 #
 # Usage: tests/toy/build.sh <cactus.sif> <vg.sif> [workdir]
 #   THREADS (default 8). The workdir (default: a new temporary directory) keeps
-#   the Cactus outputs and logs; only the release is copied into expected/.
+#   the Cactus outputs and logs.
+#   TOY_MODE=update (default) replaces expected/ with the new release.
+#   TOY_MODE=check leaves expected/ alone and compares the new release with
+#   it: every file that builds reproducibly must be byte-identical (see
+#   README.md), and validation must pass. This is the smoke test for a new
+#   host, the air-gapped one included.
 #   Regenerate the inputs first with make_inputs.py if the generator changed.
 set -euo pipefail
 
@@ -75,6 +80,26 @@ rc=0
     bash "$REPO/scripts/index-release.sh" toy "$WORK/release" \
         "$WORK/mc/toy.gfa.gz" "$WORK/mc/toy.d2.gfa.gz" "$TOY/input/GRCh38.fa.gz" \
         "$WORK/build-info.json" "$THREADS" || rc=$?
+
+if [ "${TOY_MODE:-update}" = check ]; then
+    echo "== 3. compare with expected/ ($(date -Is))"
+    # the distance indexes and the minimizer index are not deterministic
+    # across threads; everything else must come out byte for byte
+    diffs=0
+    for f in "$TOY"/expected/toy.*; do
+        b=$(basename "$f")
+        case $b in *.dist|*.min) continue ;; esac
+        if cmp -s "$f" "$WORK/release/$b"; then
+            echo "same  $b"
+        else
+            echo "DIFF  $b"; diffs=$((diffs + 1))
+        fi
+    done
+    echo "validation: exit $rc; differing files: $diffs"
+    echo "workdir: $WORK"
+    [ "$rc" -eq 0 ] && [ "$diffs" -eq 0 ] && exit 0
+    exit 3
+fi
 
 echo "== 3. expected/ ($(date -Is))"
 rm -rf "$TOY/expected"
