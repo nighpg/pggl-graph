@@ -20,7 +20,7 @@
 
     "sites": {
       "type": "object",
-      "description": "Per filesystem: an absolute directory for every root that a file entry names. The same release copied to another system only needs another site.",
+      "description": "Per filesystem: a directory for every root that a file entry names. The same release copied to another system only needs another site. A relative directory is taken relative to the manifest file, which keeps a checked-in release (the toy) relocatable.",
       "minProperties": 1,
       "additionalProperties": {
         "type": "object",
@@ -31,7 +31,7 @@
           "roots": {
             "type": "object",
             "minProperties": 1,
-            "additionalProperties": {"type": "string", "pattern": "^/"}
+            "additionalProperties": {"type": "string", "minLength": 1}
           }
         }
       }
@@ -112,6 +112,17 @@
         "fasta_matches_graph": {
           "type": ["boolean", "null"],
           "description": "Every reference contig of the graph has the same md5 as in fasta. null: not checked."
+        },
+        "source_fasta": {
+          "type": "object",
+          "description": "The linear FASTA the reference was built from and fasta was checked against (M5 of every contig). It lives outside the release, so it is identified, not located.",
+          "additionalProperties": false,
+          "required": ["name", "md5"],
+          "properties": {
+            "name": {"type": "string"},
+            "size": {"type": "integer", "minimum": 0},
+            "md5": {"type": "string", "pattern": "^[0-9a-f]{32}$"}
+          }
         }
       }
     },

@@ -14,14 +14,18 @@
 # Memory: check 5 holds the giraffe index set in memory, so it needs roughly
 # min + dist + gbz (JaSaPaGe: 38 + 7.6 + 3.3 GB) plus headroom.
 set -euo pipefail
+trap 'echo "validate-graph.sbatch: failed at line $LINENO: $BASH_COMMAND" >&2' ERR
 
 : "${VG_SIF:?set VG_SIF to the image with the per-sample vg}"
 : "${MANIFEST:?set MANIFEST to the graph.manifest.json to validate}"
 : "${SITE:?set SITE to the manifest site this host sees}"
 : "${OUT:?set OUT to the output directory}"
 
-REPO=$(cd "$(dirname "$(readlink -f "$MANIFEST")")" && git rev-parse --show-toplevel)
-AP=${APPTAINER:-$(command -v apptainer)}
+REPO=$(cd "$(dirname "$(readlink -f "$0")")/.." 2>/dev/null && pwd)
+[ -f "$REPO/scripts/validate-graph.sh" ] || REPO=$(cd "$(dirname "$(readlink -f "$MANIFEST")")" && git rev-parse --show-toplevel)
+# apptainer is not on PATH on every compute node; take the newest installed one
+AP=${APPTAINER:-$(command -v apptainer || ls -d /opt/pkg/apptainer/*/bin/apptainer 2>/dev/null | sort -V | tail -1)}
+[ -x "$AP" ] || { echo "validate-graph.sbatch: apptainer not found; set APPTAINER" >&2; exit 1; }
 ROOT_DIRS=$(python3 "$REPO/scripts/manifest.py" resolve "$MANIFEST" --site "$SITE" \
             | sed -n 's/^ROOT_DIRS=//p' | tr -d "'")
 mkdir -p "$OUT"

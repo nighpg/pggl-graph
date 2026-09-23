@@ -70,8 +70,16 @@ def file_entries(m):
 
 
 def resolve(m, site, entry):
-    roots = m["sites"][site]["roots"]
-    return os.path.join(roots[entry["root"]], entry["path"])
+    """Absolute path of a file entry. A relative root is taken relative to the
+    manifest's own directory, which keeps a checked-in release relocatable."""
+    root = m["sites"][site]["roots"][entry["root"]]
+    return os.path.normpath(os.path.join(m.get("_dir", "."), root, entry["path"]))
+
+
+def load(path):
+    m = json.load(open(path))
+    m["_dir"] = os.path.dirname(os.path.abspath(path))
+    return m
 
 
 def cmd_entry(a):
@@ -92,6 +100,7 @@ def cmd_entry(a):
 
 
 def structural_errors(m):
+    m = {k: v for k, v in m.items() if k != "_dir"}
     errs = []
     try:
         import jsonschema
@@ -174,7 +183,7 @@ def contract_violations(m):
 
 
 def cmd_check(a):
-    m = json.load(open(a.manifest))
+    m = load(a.manifest)
     errs = structural_errors(m)
     if not errs and a.site:
         if a.site not in m["sites"]:
@@ -198,7 +207,7 @@ def cmd_check(a):
 
 
 def cmd_job(a):
-    m = json.load(open(a.manifest))
+    m = load(a.manifest)
     if a.site not in m["sites"]:
         sys.exit("site '%s' not in sites (%s)" % (a.site, ", ".join(m["sites"])))
     roles = m["roles"]
@@ -229,7 +238,7 @@ def cmd_job(a):
 
 def cmd_resolve(a):
     import shlex
-    m = json.load(open(a.manifest))
+    m = load(a.manifest)
     if a.site not in m["sites"]:
         sys.exit("site '%s' not in sites (%s)" % (a.site, ", ".join(m["sites"])))
     ref = m["reference"]
@@ -244,7 +253,8 @@ def cmd_resolve(a):
         ("GRAPHS", " ".join(sorted(m["graphs"]))),
         ("GIRAFFE_GRAPH", m["roles"].get("giraffe", "")),
         ("INDEX_VG", m["index_builder"]["vg_version"]),
-        ("ROOT_DIRS", ",".join(sorted(set(m["sites"][a.site]["roots"].values())))),
+        ("ROOT_DIRS", ",".join(sorted(set(os.path.normpath(os.path.join(m["_dir"], r))
+                                          for r in m["sites"][a.site]["roots"].values())))),
     ]
     for g, files in sorted(m["graphs"].items()):
         for k in INDEX_KEYS:
@@ -255,9 +265,10 @@ def cmd_resolve(a):
 
 
 def cmd_set_validation(a):
-    m = json.load(open(a.manifest))
+    m = load(a.manifest)
     v = json.load(open(a.validation))
     m["validation"] = v
+    m.pop("_dir")
     with open(a.manifest, "w") as f:
         json.dump(m, f, indent=2)
         f.write("\n")
