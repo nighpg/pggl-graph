@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "name": "JaSaPaGe",
+  "release": "2025-06",
+  "description": "Japanese pangenome, 66 samples plus CHM13v2 and GRCh38 (134 haplotypes). Built outside pggl-graph; this manifest was written by hand afterwards and is the negative control for scripts/validate-graph.sh: its GRCh38 is fragmented.",
+  "sites": {
+    "nig-lustre": {
+      "description": "NIG supercomputer, online partitions (/lustre9, /lustre10)",
+      "roots": {
+        "release": "/lustre9/open/shared_data/visc/data/JaSaPaGe",
+        "index": "/lustre10/home/ykawai/project/pggl-run/index",
+        "hapl": "/lustre10/home/ykawai/project/pggl-run/hapl",
+        "ref": "/lustre10/home/ykawai/project/pggl-run/ref",
+        "grch38": "/lustre9/open/shared_data/public-human-genomes/GRCh38/fasta"
+      }
+    }
+  },
+  "build": {
+    "method": "minigraph-cactus",
+    "date": "2025-06-04",
+    "cactus_version": null,
+    "toil_version": null,
+    "cactus_image": null,
+    "cactus_internal_vg": null,
+    "reference_order": [
+      "CHM13v2",
+      "GRCh38"
+    ],
+    "reference_order_source": "inferred",
+    "seqfile": {
+      "root": "release",
+      "path": "fasta_JaSaPaGe.txt",
+      "size": 8452,
+      "md5": "3ae2a19c47eb28e5835884ef754d080c",
+      "producer": {
+        "tool": "hand-written",
+        "version": null
+      },
+      "note": "The FASTA paths in it no longer exist"
+    },
+    "samples": 68,
+    "haplotypes": 134,
+    "options": {},
+    "note": "No build log survives. reference_order is taken from the GBWT reference_samples tag and the GFA RS tag (both 'CHM13v2 GRCh38') and from the seqfile, which lists CHM13v2 first. The date is the mtime of the outputs."
+  },
+  "index_builder": {
+    "vg_version": "v1.70.0",
+    "image": {
+      "ref": "pggl-workflow sif-build.def",
+      "file": "deepvariant-opencode-cpu-vg.sif",
+      "sha256": "6b241f670628b11fce5b72e16e80dd5307a0fe298458b1f61395f4e462978e34",
+      "note": "Digest taken on 2026-09-23 from the SIF the indexes were built with (image built 2026-09-21 15:06, index jobs submitted from 15:07)"
+    }
+  },
+  "reference": {
+    "sample": "GRCh38",
+    "haplotype": 0,
+    "path_prefix": "GRCh38#0#",
+    "contigs": 25,
+    "whole_paths": false,
+    "fragment_paths": 165,
+    "fasta": {
+      "root": "grch38",
+      "path": "GRCh38_full_analysis_set_plus_decoy_hla.fa",
+      "size": 3263683042,
+      "md5": "64b32de2fc934679c16e83a2bc072064",
+      "producer": {
+        "tool": "external",
+        "version": null
+      },
+      "note": "The linear FASTA the CRAMs were encoded against; not taken from the graph"
+    },
+    "fai": {
+      "root": "ref",
+      "path": "GRCh38.fa.fai",
+      "size": 154196,
+      "md5": "5ccc91e56dc4a05448dd5b9507ec6bc6",
+      "producer": {
+        "tool": "samtools",
+        "version": null
+      }
+    },
+    "dict": {
+      "root": "ref",
+      "path": "GRCh38.dict",
+      "size": 632202,
+      "md5": "d75cbf7bdc1f20987f90bd71da85439d",
+      "producer": {
+        "tool": "samtools",
+        "version": null
+      }
+    },
+    "pansn_dict": {
+      "root": "index",
+      "path": "GRCh38.pansn.dict",
+      "size": 874,
+      "md5": "259a9cfe3ef5fff13530cccdefaae3a6",
+      "producer": {
+        "tool": "hand-written",
+        "version": null
+      },
+      "note": "SN:GRCh38#0#<contig> with lengths from GRCh38.fa.fai. vg surject needs it to fold the fragments back into their contigs."
+    },
+    "fasta_source": "external",
+    "fasta_matches_graph": null
+  },
+  "graphs": {
+    "clip": {
+      "gbz": {
+        "root": "release",
+        "path": "JaSaPaGe.gbz",
+        "size": 3536943824,
+        "md5": "c528b659096de368670d321973a6e0d8",
+        "producer": {
+          "tool": "minigraph-cactus",
+          "version": null
+        },
+        "format_version": 1,
+        "note": "Format inferred: vg 1.70 reads it, and vg 1.70 only reads GBZ format 1"
+      },
+      "dist": {
+        "root": "index",
+        "path": "jasapage.dist",
+        "size": 8078227888,
+        "md5": "0e6fc9d567fe67e8b93e0c02b6d7ddaa",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "min": {
+        "root": "index",
+        "path": "jasapage.shortread.withzip.min",
+        "size": 39858549320,
+        "md5": "5d04a0ffce011bb70c27fc2c9892fa46",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "zipcodes": {
+        "root": "index",
+        "path": "jasapage.shortread.zipcodes",
+        "size": 2687552366,
+        "md5": "d3f9268964d1af8a1d8be28c14487b56",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "snarls": {
+        "root": "release",
+        "path": "JaSaPaGe.snarls",
+        "size": 185057032,
+        "md5": "624894103df52609189e54bbde2c0870",
+        "producer": {
+          "tool": "minigraph-cactus",
+          "version": null
+        },
+        "note": "Shipped with the graph, made by the vg inside Cactus"
+      },
+      "ri": {
+        "root": "hapl",
+        "path": "jasapage.ri",
+        "size": 5696580972,
+        "md5": "68ec1de8a3bfb533adedc57effac2bbb",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "hapl": {
+        "root": "hapl",
+        "path": "jasapage.hapl",
+        "size": 5720567920,
+        "md5": "7cc30e7e86c290dae548ee751a5d3736",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        },
+        "format_version": 5,
+        "note": "Rebuilt locally; replaces the shipped JaSaPaGe.hapl"
+      },
+      "reference_samples": [
+        "CHM13v2",
+        "GRCh38"
+      ],
+      "haplotypes": 134
+    }
+  },
+  "roles": {
+    "giraffe": "clip",
+    "haplotype_sampling": "clip",
+    "call_sv": "clip",
+    "pangenome_aware_dv": "clip"
+  },
+  "other_files": {
+    "shipped_hapl": {
+      "root": "release",
+      "path": "JaSaPaGe.hapl",
+      "size": 5720385944,
+      "md5": "031dcb41837f17cbf15c5c68650fa7d7",
+      "producer": {
+        "tool": "minigraph-cactus",
+        "version": null
+      },
+      "format_version": 4,
+      "note": "Rejected by vg 1.70, which requires format 5. Superseded by graphs.clip.hapl."
+    },
+    "chm13_ref_paths": {
+      "root": "index",
+      "path": "jasapage.ref_paths.txt",
+      "size": 388,
+      "md5": "0b471835c3df198043a69477744f9e3b",
+      "producer": {
+        "tool": "pggl-workflow prepare_pangenome_indexes.sh",
+        "version": null
+      },
+      "note": "ref_paths for the CHM13v2 target (ref_path_prefix CHM13v2#0#), whose 25 paths are whole"
+    }
+  },
+  "known_issues": [
+    "GRCh38 is not the first --reference, so it is stored as 166 paths, 165 of them subranges such as GRCh38#0#chr1[585988].",
+    "pangenome-aware DeepVariant cannot call against GRCh38: it resolves each contig name to that contig's first fragment only.",
+    "vg surject needs reference.pansn_dict; a plain path list drops the fragments from @SQ and leaves the reads unmapped.",
+    "vg call writes ##contig lengths 10-83 kb short (the end of the last fragment); pggl-workflow's vg-call-sv.sh rewrites them from the .dict.",
+    "The graph covers 92.4% of GRCh38 by length and 97.6% of its non-N bases; clipped centromeric and satellite sequence cannot be called.",
+    "The shipped JaSaPaGe.hapl is format 4, which vg 1.70 rejects; graphs.clip.hapl is a local rebuild."
+  ],
+  "validation": {
+    "status": "not_run",
+    "date": null,
+    "validator": null,
+    "vg_version": null,
+    "graph": null,
+    "checks": [],
+    "report": null
+  }
+}

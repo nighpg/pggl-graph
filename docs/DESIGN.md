@@ -153,16 +153,39 @@ For scale, JaSaPaGe (134 haplotypes) produced `chr1.hal` 10 GB and `chr1.vg`
 
 ## Manifest
 
-Fixed in the next step, with a hand-written manifest for JaSaPaGe as the first
-instance. It records:
+Schema: `schema/graph.manifest.schema.json` (JSON Schema draft-07). One manifest
+per release, at `releases/<name>/graph.manifest.json`. The first one is the
+hand-written manifest for JaSaPaGe.
 
-- `schema_version`, release name
-- Cactus version, image digest, the vg inside Cactus, the `--reference` order,
-  the seqfile and its md5, and the build options
-- the vg that produced the indexes, and its image digest
-- for each file: relative path, size, md5, and producer (tool and version)
-- the site roots
-- the validation report
+- **Sites and roots.** A file entry names a root and a path relative to it.
+  Each site maps root names to absolute directories. A new release has a
+  single root; JaSaPaGe needs five because its files are scattered. Copying a
+  release to another system only adds a site.
+- **Every file carries its producer** (tool and version) and, where the tool
+  reports one, its `format_version`. This is what stops a `.hapl` v4 or a GBZ
+  v2 from reaching vg 1.70 unnoticed. `index_builder.vg_version` names the vg
+  that every index must come from.
+- **One index set per graph** under `graphs.{clip,filter}`. `roles` says which
+  graph serves giraffe, haplotype sampling, `call_sv` and pangenome-aware
+  DeepVariant.
+- **Superseded or informational files** go under `other_files`, with a note.
+  Example: JaSaPaGe's shipped `.hapl`.
+- `null` means "cannot be established", for example the Cactus version of a
+  graph built without a surviving log. It never means "not looked up".
+
+`scripts/manifest.py` uses only the standard library, so it also runs on the
+air-gapped hosts. It has three subcommands:
+
+| Command | Does |
+| --- | --- |
+| `entry` | Prints one file entry, with size and md5 taken from the file |
+| `check [--site S --sizes --md5] [--contract]` | Checks the schema, cross-references and files on disk. Exits 1 on any mismatch. With `--contract`, exits 3 when the release breaks what pggl-workflow relies on (3 is also what `vg-call-sv.sh` uses for a fragmented reference) |
+| `job --site S` | Prints the pggl-workflow inputs (`gbz`, `dist`, `min`, `zipcodes`, `snarls`, `ref`, `ref_paths`, `ref_path_prefix`) |
+
+On JaSaPaGe, `check --contract` exits 3 from the manifest alone: GRCh38 is not
+first, there are two references, 165 fragment paths, an external FASTA, a GBZ
+and snarls not made by vg 1.70, and no validation yet. Checking against the
+graph itself is `validate-graph.sh`'s job.
 
 ## Offline
 

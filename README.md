@@ -67,6 +67,8 @@ scripts/      what every Tool and sbatch job actually runs, plus
 sbatch/       per-stage Slurm jobs for production builds
 tests/toy/    a few small FASTAs that run end to end
 tests/compat/ cross-version checks between the Cactus and per-sample images
+schema/       graph.manifest.schema.json
+releases/     one graph.manifest.json per release (JaSaPaGe/ is the first)
 docs/         design, resource estimates, offline procedure, captured --help
 ```
 

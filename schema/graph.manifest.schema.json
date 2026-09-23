@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/nighpg/pggl-graph/schema/graph.manifest.schema.json",
+  "title": "pggl-graph release manifest",
+  "description": "Describes one pangenome graph release: where its files are, what produced each of them, how the graph was built and whether it passed scripts/validate-graph.sh. The files themselves never enter git.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "name", "release", "sites", "build", "index_builder",
+    "reference", "graphs", "roles", "validation"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "name": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$"},
+    "release": {
+      "type": "string",
+      "description": "Release label; name + release identifies the manifest"
+    },
+    "description": {"type": "string"},
+
+    "sites": {
+      "type": "object",
+      "description": "Per filesystem: an absolute directory for every root that a file entry names. The same release copied to another system only needs another site.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["roots"],
+        "properties": {
+          "description": {"type": "string"},
+          "roots": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {"type": "string", "pattern": "^/"}
+          }
+        }
+      }
+    },
+
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "reference_order", "reference_order_source"],
+      "properties": {
+        "method": {"const": "minigraph-cactus"},
+        "date": {"type": ["string", "null"], "format": "date"},
+        "cactus_version": {"type": ["string", "null"]},
+        "toil_version": {"type": ["string", "null"]},
+        "cactus_image": {"oneOf": [{"$ref": "#/definitions/image"}, {"type": "null"}]},
+        "cactus_internal_vg": {
+          "type": ["string", "null"],
+          "description": "The vg bundled in the Cactus image. Not the vg of the indexes: see index_builder."
+        },
+        "reference_order": {
+          "type": "array",
+          "description": "--reference exactly as given. Only the first entry stays whole; every later one is clipped into subrange paths.",
+          "items": {"type": "string"},
+          "minItems": 1
+        },
+        "reference_order_source": {
+          "enum": ["recorded", "inferred"],
+          "description": "recorded: taken from the build command. inferred: reconstructed afterwards (for example from the GBWT reference_samples tag)."
+        },
+        "seqfile": {"oneOf": [{"$ref": "#/definitions/file"}, {"type": "null"}]},
+        "samples": {"type": ["integer", "null"], "minimum": 1},
+        "haplotypes": {"type": ["integer", "null"], "minimum": 1},
+        "options": {
+          "type": "object",
+          "description": "Cactus options that shape the graph (clip, filter, mgSplit, ...), by option name without dashes"
+        },
+        "note": {"type": "string"}
+      }
+    },
+
+    "index_builder": {
+      "type": "object",
+      "description": "The vg that indexes are built with. It must be the vg of the per-sample workflows: vg 1.70 rejects a .hapl of format 4 and a GBZ of format 2.",
+      "additionalProperties": false,
+      "required": ["vg_version"],
+      "properties": {
+        "vg_version": {"type": "string"},
+        "image": {"oneOf": [{"$ref": "#/definitions/image"}, {"type": "null"}]}
+      }
+    },
+
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sample", "haplotype", "path_prefix", "contigs", "whole_paths", "pansn_dict"],
+      "properties": {
+        "sample": {"type": "string", "description": "PanSN sample name of the reference (GRCh38)"},
+        "haplotype": {"type": "integer", "minimum": 0},
+        "path_prefix": {
+          "type": "string",
+          "pattern": "^[^#]+#[0-9]+#$",
+          "description": "pggl-workflow's ref_path_prefix"
+        },
+        "contigs": {"type": "integer", "minimum": 1, "description": "Number of reference contigs (25 for GRCh38 chr1-22, X, Y, M)"},
+        "whole_paths": {
+          "type": "boolean",
+          "description": "true when every contig is one path without a [offset] suffix. pangenome-aware DeepVariant needs this."
+        },
+        "fragment_paths": {"type": ["integer", "null"], "minimum": 0, "description": "Number of reference paths whose name contains ["},
+        "fasta": {"oneOf": [{"$ref": "#/definitions/file"}, {"type": "null"}], "description": "pggl-workflow's ref"},
+        "fai": {"oneOf": [{"$ref": "#/definitions/file"}, {"type": "null"}]},
+        "dict": {"oneOf": [{"$ref": "#/definitions/file"}, {"type": "null"}]},
+        "pansn_dict": {"$ref": "#/definitions/file", "description": "pggl-workflow's ref_paths: SN:<path_prefix><contig> with the full contig length"},
+        "fasta_source": {
+          "enum": ["graph", "external"],
+          "description": "graph: extracted with vg paths -F. external: a linear FASTA that was not taken from the graph."
+        },
+        "fasta_matches_graph": {
+          "type": ["boolean", "null"],
+          "description": "Every reference contig of the graph has the same md5 as in fasta. null: not checked."
+        }
+      }
+    },
+
+    "graphs": {
+      "type": "object",
+      "description": "One index set per graph, because dist and snarls belong to one graph each",
+      "minProperties": 1,
+      "propertyNames": {"enum": ["full", "clip", "filter"]},
+      "additionalProperties": {"$ref": "#/definitions/graph"}
+    },
+
+    "roles": {
+      "type": "object",
+      "description": "Which graph serves which pggl-workflow use. Every value must be a key of graphs.",
+      "additionalProperties": false,
+      "properties": {
+        "giraffe": {"enum": ["full", "clip", "filter"], "description": "gbz, dist, min, zipcodes"},
+        "haplotype_sampling": {"enum": ["full", "clip", "filter"], "description": "gbz, ri, hapl"},
+        "call_sv": {"enum": ["full", "clip", "filter"], "description": "snarls (of the graph that is genotyped)"},
+        "pangenome_aware_dv": {"enum": ["full", "clip", "filter"], "description": "gbz"}
+      }
+    },
+
+    "other_files": {
+      "type": "object",
+      "description": "Files that belong to the release but are not pggl-workflow inputs, or are superseded ones kept for the record",
+      "additionalProperties": {"$ref": "#/definitions/file"}
+    },
+
+    "known_issues": {"type": "array", "items": {"type": "string"}},
+
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checks"],
+      "properties": {
+        "status": {"enum": ["pass", "fail", "not_run"]},
+        "date": {"type": ["string", "null"]},
+        "validator": {"type": ["string", "null"], "description": "scripts/validate-graph.sh and the pggl-graph commit it ran from"},
+        "vg_version": {"type": ["string", "null"]},
+        "graph": {"enum": ["full", "clip", "filter", null]},
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "status"],
+            "properties": {
+              "id": {"type": "string"},
+              "name": {"type": "string"},
+              "status": {"enum": ["pass", "fail", "skip"]},
+              "detail": {"type": "string"}
+            }
+          }
+        },
+        "report": {"oneOf": [{"$ref": "#/definitions/file"}, {"type": "null"}]}
+      }
+    }
+  },
+
+  "definitions": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "path", "size", "md5", "producer"],
+      "properties": {
+        "root": {"type": "string", "description": "A key of sites.<site>.roots"},
+        "path": {
+          "type": "string",
+          "description": "Relative to the root; no leading / and no .. component",
+          "pattern": "^(?!/)(?!(.*/)?\\.\\.(/|$)).+$"
+        },
+        "size": {"type": "integer", "minimum": 0},
+        "md5": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["tool", "version"],
+          "properties": {
+            "tool": {"type": "string", "description": "vg, minigraph-cactus, samtools, pggl-graph, ..."},
+            "version": {"type": ["string", "null"], "description": "null when it cannot be established"},
+            "command": {"type": "string"}
+          }
+        },
+        "format_version": {"type": "integer", "description": "On-disk format version where the tool reports one (GBZ, .hapl)"},
+        "note": {"type": "string"}
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref"],
+      "properties": {
+        "ref": {"type": "string", "description": "Where the image came from (docker:// reference or build recipe)"},
+        "file": {"type": "string", "description": "SIF file name"},
+        "sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "note": {"type": "string"}
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gbz"],
+      "properties": {
+        "gbz": {"$ref": "#/definitions/file"},
+        "dist": {"$ref": "#/definitions/file"},
+        "min": {"$ref": "#/definitions/file"},
+        "zipcodes": {"$ref": "#/definitions/file"},
+        "snarls": {"$ref": "#/definitions/file"},
+        "ri": {"$ref": "#/definitions/file"},
+        "hapl": {"$ref": "#/definitions/file"},
+        "reference_samples": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The GBWT reference_samples tag of this GBZ"
+        },
+        "haplotypes": {"type": ["integer", "null"]},
+        "note": {"type": "string"}
+      }
+    }
+  }
+}
