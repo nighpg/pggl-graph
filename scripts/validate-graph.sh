@@ -194,5 +194,7 @@ $EVAL report "$RES" "$VG_VERSION" "scripts/validate-graph.sh @ pggl-graph ${REV}
     > "$OUT/validation.json" || exit 1
 status=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["status"])' "$OUT/validation.json")
 log ""
-log "overall: ${status} (${OUT}/validation.json)"
+# no path in the log: it is kept with the release, and checked in for the toy
+log "overall: ${status}"
+echo "result: ${OUT}/validation.json"
 [ "$status" = pass ] && exit 0 || exit 3

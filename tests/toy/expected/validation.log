@@ -13,4 +13,4 @@ check 5: 1000 pairs simulated from GRCh38#0#chr20
 5a    surject   pass PanSN .dict: 4 @SQ, 2000/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length
 5b    surject   pass plain path list: 4 @SQ, 2000/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length
 
-overall: pass (/tmp/claude-3103/-lustre10-home-ykawai-project-pggl-graph/849c7b1c-c974-4e40-828c-7d179a277885/scratchpad/toybuild/release/validation/validation.json)
+overall: pass
