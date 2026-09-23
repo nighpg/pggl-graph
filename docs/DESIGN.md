@@ -96,6 +96,11 @@ independently for each chromosome.
                            validate-graph.sh, write graph.manifest.json
 ```
 
+Status: [D] and [E] are implemented, and `scripts/index-release.sh` runs them
+on one host (the toy, and small builds). [A]-[C] still run as the all-in-one
+`cactus-pangenome --mgSplit` in `tests/toy/build.sh`. The staged sbatch and CWL
+versions are next, and they must reproduce `tests/toy/expected/`.
+
 - Each task in [B] runs Toil with `--batchSystem single_machine`, with the
   jobStore and `--workDir` on `/scratch` and `--binariesMode local`. This
   removes the long-running Toil leader, Toil's multi-node machinery and the
@@ -109,6 +114,16 @@ independently for each chromosome.
   for small builds. Its chromosome scatter runs serially: `cwltool --parallel`
   hands scattered jobs the same temporary output directory and fails with
   `FileExistsError` / exit 127.
+
+The toy build records two facts that bear on this design:
+
+- The Cactus-derived files (GBZ, reference, clip indexes, snarls) are
+  byte-identical between runs at different core counts. The filter graph's
+  autoindex outputs (`dist`, `min`) are not, so a rebuild is judged by
+  `validate-graph.sh`, not by md5.
+- Toil costs about 7 s per job even on the toy (about 300 jobs, 12-18
+  minutes). That overhead does not matter at full scale, but it is why the
+  toy is not a quick unit test.
 
 ### Resource estimates
 

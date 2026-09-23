@@ -6,8 +6,10 @@ with Minigraph-Cactus. It runs once per pangenome release, whereas pggl-workflow
 runs once per sample. The two differ in how often they change, in the compute
 they need and in their container images, so they live in separate repositories.
 
-> **Status: skeleton.** The design is in [`docs/DESIGN.md`](docs/DESIGN.md).
-> Nothing runs yet.
+> **Status:** the manifest, the validator and stages [D]-[E] work, and the toy
+> release in [`tests/toy/`](tests/toy/README.md) builds end to end and passes
+> validation. The staged Cactus jobs ([A]-[C]) are next. The design is in
+> [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## What a release must satisfy
 

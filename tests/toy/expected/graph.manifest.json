@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "name": "toy",
+  "release": "toy",
+  "sites": {
+    "toy": {
+      "roots": {
+        "release": "."
+      }
+    }
+  },
+  "build": {
+    "method": "minigraph-cactus",
+    "date": "2026-09-24",
+    "cactus_version": "3.3.0",
+    "toil_version": "9.5.0",
+    "cactus_image": {
+      "ref": "docker://quay.io/comparative-genomics-toolkit/cactus:v3.3.0",
+      "file": "cactus_v3.3.0.sif",
+      "sha256": "9369ee9abc5e9756dd14b358f68a0221f3058ef3d5984627e8d08c45e162beef"
+    },
+    "cactus_internal_vg": "v1.76.1-89-gf2ed0bbd4",
+    "reference_order": [
+      "GRCh38"
+    ],
+    "reference_order_source": "recorded",
+    "samples": 5,
+    "haplotypes": 8,
+    "options": {
+      "reference": [
+        "GRCh38"
+      ],
+      "mgSplit": true,
+      "clip": 10000,
+      "filter": 2,
+      "gfa": [
+        "clip",
+        "filter"
+      ]
+    },
+    "note": "tests/toy: synthetic assemblies from make_inputs.py, all-in-one cactus-pangenome",
+    "seqfile": {
+      "root": "release",
+      "path": "toy.seqfile.txt",
+      "size": 134,
+      "md5": "a78d564146dab0364d0531be02b7eb11",
+      "producer": {
+        "tool": "hand-written",
+        "version": null
+      }
+    }
+  },
+  "index_builder": {
+    "vg_version": "v1.70.0",
+    "image": {
+      "ref": "deepvariant-opencode-cpu-vg.sif",
+      "sha256": "6b241f670628b11fce5b72e16e80dd5307a0fe298458b1f61395f4e462978e34"
+    }
+  },
+  "reference": {
+    "sample": "GRCh38",
+    "haplotype": 0,
+    "path_prefix": "GRCh38#0#",
+    "contigs": 4,
+    "whole_paths": true,
+    "fragment_paths": 0,
+    "fasta": {
+      "root": "release",
+      "path": "toy.ref.fa",
+      "size": 101693,
+      "md5": "119cf40a21ba87e1f80f53247d31646b",
+      "producer": {
+        "tool": "pggl-graph reference_files.py",
+        "version": null
+      },
+      "note": "vg paths -S GRCh38 -F on the filter graph"
+    },
+    "fai": {
+      "root": "release",
+      "path": "toy.ref.fa.fai",
+      "size": 88,
+      "md5": "2015daf9c8c8ed1deb7d7ed4fb00e8de",
+      "producer": {
+        "tool": "pggl-graph reference_files.py",
+        "version": null
+      }
+    },
+    "dict": {
+      "root": "release",
+      "path": "toy.ref.dict",
+      "size": 251,
+      "md5": "ff52f535854664403e542da425c79f34",
+      "producer": {
+        "tool": "pggl-graph reference_files.py",
+        "version": null
+      }
+    },
+    "pansn_dict": {
+      "root": "release",
+      "path": "toy.ref.pansn.dict",
+      "size": 287,
+      "md5": "a99110ca9ad3585e6526929b570ead02",
+      "producer": {
+        "tool": "pggl-graph reference_files.py",
+        "version": null
+      }
+    },
+    "fasta_source": "graph",
+    "fasta_matches_graph": true,
+    "source_fasta": {
+      "name": "GRCh38.fa.gz",
+      "size": 30918,
+      "md5": "f245683691a1a4fbf9cc789a82bbd802"
+    }
+  },
+  "graphs": {
+    "clip": {
+      "gbz": {
+        "root": "release",
+        "path": "toy.clip.gbz",
+        "size": 130048,
+        "md5": "d309ac7306ba7345a41186ce6a11d042",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        },
+        "format_version": 1
+      },
+      "dist": {
+        "root": "release",
+        "path": "toy.clip.dist",
+        "size": 188144,
+        "md5": "f4e9944afa3cd7564285ca1763a5d29a",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "snarls": {
+        "root": "release",
+        "path": "toy.clip.snarls",
+        "size": 10803,
+        "md5": "32dfa312b02be8705a34c1b74d14d341",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "ri": {
+        "root": "release",
+        "path": "toy.clip.ri",
+        "size": 114669,
+        "md5": "6403a6f8f3b10298201cd08507da5dc5",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        },
+        "format_version": 1
+      },
+      "hapl": {
+        "root": "release",
+        "path": "toy.clip.hapl",
+        "size": 182800,
+        "md5": "1110ad6f0ea56c027f3b148dab5de242",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        },
+        "format_version": 5
+      },
+      "reference_samples": [
+        "GRCh38"
+      ],
+      "haplotypes": 8
+    },
+    "filter": {
+      "gbz": {
+        "root": "release",
+        "path": "toy.filter.gbz",
+        "size": 168760,
+        "md5": "da68bbbb5066150e1c8420b65a1a9b27",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        },
+        "format_version": 1
+      },
+      "dist": {
+        "root": "release",
+        "path": "toy.filter.dist",
+        "size": 67496,
+        "md5": "a01e9b725cac778951a392e2e62112d9",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "min": {
+        "root": "release",
+        "path": "toy.filter.min",
+        "size": 1048704,
+        "md5": "45fb46a6908b790f609f98d7538b3cad",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        },
+        "format_version": 11
+      },
+      "zipcodes": {
+        "root": "release",
+        "path": "toy.filter.zipcodes",
+        "size": 4721,
+        "md5": "9bc788ab2bf4ddc4894a54f834ac57ae",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "snarls": {
+        "root": "release",
+        "path": "toy.filter.snarls",
+        "size": 295,
+        "md5": "6343c480bce34de694af0b20735fe1d3",
+        "producer": {
+          "tool": "vg",
+          "version": "v1.70.0"
+        }
+      },
+      "reference_samples": [
+        "GRCh38"
+      ],
+      "haplotypes": 8
+    }
+  },
+  "roles": {
+    "giraffe": "filter",
+    "haplotype_sampling": "clip",
+    "call_sv": "clip",
+    "pangenome_aware_dv": "filter"
+  },
+  "validation": {
+    "status": "pass",
+    "date": "2026-09-24",
+    "validator": "scripts/validate-graph.sh @ pggl-graph c2cbe3d",
+    "vg_version": "v1.70.0",
+    "graph": "filter",
+    "checks": [
+      {
+        "id": "1/clip",
+        "name": "paths",
+        "status": "pass",
+        "detail": "4 GRCh38 paths, no fragment names"
+      },
+      {
+        "id": "2/clip",
+        "name": "lengths",
+        "status": "pass",
+        "detail": "all 4 contigs are whole paths with the .fai length"
+      },
+      {
+        "id": "3/clip",
+        "name": "tags",
+        "status": "pass",
+        "detail": "reference_samples = GRCh38"
+      },
+      {
+        "id": "4/clip",
+        "name": "readable",
+        "status": "pass",
+        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; ri R-index v1; hapl Haplotypes v5; snarls ok (2068 records); hapl loads against the gbz"
+      },
+      {
+        "id": "1/filter",
+        "name": "paths",
+        "status": "pass",
+        "detail": "4 GRCh38 paths, no fragment names"
+      },
+      {
+        "id": "2/filter",
+        "name": "lengths",
+        "status": "pass",
+        "detail": "all 4 contigs are whole paths with the .fai length"
+      },
+      {
+        "id": "3/filter",
+        "name": "tags",
+        "status": "pass",
+        "detail": "reference_samples = GRCh38"
+      },
+      {
+        "id": "4/filter",
+        "name": "readable",
+        "status": "pass",
+        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; min MinimizerIndex v11; zipcodes ZipCodeCollection; snarls ok (32 records)"
+      },
+      {
+        "id": "5a",
+        "name": "surject",
+        "status": "pass",
+        "detail": "PanSN .dict: 4 @SQ, 2000/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length"
+      },
+      {
+        "id": "5b",
+        "name": "surject",
+        "status": "pass",
+        "detail": "plain path list: 4 @SQ, 2000/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length"
+      }
+    ],
+    "report": null
+  }
+}

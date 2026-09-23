@@ -1,0 +1,8 @@
+GRCh38	GRCh38.fa.gz
+CHM13	CHM13.fa.gz
+S1.1	S1.1.fa.gz
+S1.2	S1.2.fa.gz
+S2.1	S2.1.fa.gz
+S2.2	S2.2.fa.gz
+S3.1	S3.1.fa.gz
+S3.2	S3.2.fa.gz
