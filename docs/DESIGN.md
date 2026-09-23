@@ -206,12 +206,13 @@ graph itself is `validate-graph.sh`'s job.
 
 ## Offline
 
-This follows pggl-workflow's mechanism (`fetch-offline-bundle.sh`,
-`setup-offline.sh`, `stage-sif-assets.sh`). The Cactus SIF is 499 MB, and a
-vg-only SIF adds a few hundred MB, so the images are small. The input
-assemblies dominate the bundle: JaSaPaGe's cleaned assemblies alone are
-177 GB. Downloads go through a shell-level retry helper, because curl 7.68's
-`--retry` does not cover the transient error 56.
+See `docs/OFFLINE.md`. `scripts/fetch-offline-bundle.sh` collects the two
+images, the 25 primary GRCh38 contigs and this repository (5.3 GB), and
+`scripts/setup-offline.sh --verify` installs them and rebuilds the toy in
+check mode. Tested end to end with the install run inside `unshare -rn`: the
+checksums, the install and the toy all passed, and every reproducible file
+matched `tests/toy/expected/`. The input assemblies travel separately,
+because they are chosen per build.
 
 ## Copied files
 
