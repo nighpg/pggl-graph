@@ -67,6 +67,20 @@ Cactus in `--binariesMode local` and vg from the per-sample image; nothing is
 fetched. That run took 3 minutes against 12 for the same 332 Toil jobs online.
 The cause was not established: the Toil log shows no network waits.
 
+## The multi-node build
+
+`TOY_BUILD=staged` builds the toy with `scripts/build-staged.sh`, stage by
+stage on one host, as the Slurm chain would: bin, every chromosome task plus
+one past the last (which must do nothing), join, index. With `TOY_MODE=check`
+it has to match `expected/` like the one-node build, and it does: all 13
+reproducible files are identical. The same chain was also submitted to Slurm
+with `scripts/submit-staged.sh --shared`. The four chromosome tasks ran at the
+same time, and the release again matched byte for byte.
+
+```bash
+TOY_BUILD=staged TOY_MODE=check tests/toy/build.sh cactus_v3.3.0.sif <vg-1.70.sif> [workdir]
+```
+
 ## Rebuilding
 
 ```bash

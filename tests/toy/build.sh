@@ -13,6 +13,10 @@
 #   it: every file that builds reproducibly must be byte-identical (see
 #   README.md), and validation must pass. This is the smoke test for a new
 #   host, the air-gapped one included.
+#   TOY_BUILD=staged runs scripts/build-staged.sh instead, stage by stage on
+#   this host (bin, every chrom task plus one beyond the last, join, index):
+#   the multi-node build without Slurm. With TOY_MODE=check it must reproduce
+#   the same files as the one-node build.
 #   Regenerate the inputs first with make_inputs.py if the generator changed.
 set -euo pipefail
 
@@ -26,12 +30,28 @@ WORK=$(cd "$WORK" && pwd)
 # a fresh build every time: no restart from an earlier run's job store
 rm -rf "$WORK/cactus" "$WORK/release" "$WORK/work"
 
+export CACTUS_SIF VG_SIF THREADS=${THREADS:-8} MEM=${MEM:-16G} \
+    WORKROOT=$WORK/work REF_CONTIGS=chr20,chrX,chrY,chrM \
+    SITE=toy SITE_ROOT=. RELEASE_LABEL=toy \
+    BUILD_NOTE="tests/toy: synthetic assemblies from make_inputs.py"
 rc=0
-CACTUS_SIF=$CACTUS_SIF VG_SIF=$VG_SIF THREADS=${THREADS:-8} MEM=${MEM:-16G} \
-WORKROOT=$WORK/work REF_CONTIGS=chr20,chrX,chrY,chrM \
-SITE=toy SITE_ROOT=. RELEASE_LABEL=toy \
-BUILD_NOTE="tests/toy: synthetic assemblies from make_inputs.py" \
+if [ "${TOY_BUILD:-one-node}" = staged ]; then
+    staged() { bash "$REPO/scripts/build-staged.sh" "$@" "$TOY/input/seqfile.txt" toy "$WORK"; }
+    run_staged() {
+        staged bin || return
+        local n i
+        n=$(wc -l < "$WORK/cactus/chroms.txt")
+        # one task past the last chromosome, which must do nothing and succeed
+        for i in $(seq 0 "$n"); do
+            SLURM_ARRAY_TASK_ID=$i staged chrom || return
+        done
+        staged join || return
+        staged index
+    }
+    run_staged || rc=$?
+else
     bash "$REPO/scripts/build-release.sh" "$TOY/input/seqfile.txt" toy "$WORK" || rc=$?
+fi
 
 if [ "${TOY_MODE:-update}" = check ]; then
     echo "== compare with expected/ ($(date -Is))"

@@ -96,13 +96,43 @@ independently for each chromosome.
                            validate-graph.sh, write graph.manifest.json
 ```
 
-Status: `scripts/build-release.sh` (`sbatch/build-release.sbatch`) builds a
-release on one node. It runs [A]-[C] as the all-in-one `cactus-pangenome
---mgSplit`, restartable from its Toil job store, and [D]-[E] with
-`scripts/index-release.sh`. `scripts/check-seqfile.py` refuses a seqfile whose
-first entry is not GRCh38 before any compute is spent. The toy is built by the
-same script. The staged multi-node version ([A]-[C] as Slurm arrays) is next,
-and it must reproduce `tests/toy/expected/`.
+Status: both builds exist and give the same release.
+
+- **One node**: `scripts/build-release.sh` (`sbatch/build-release.sbatch`) runs
+  [A]-[C] as the all-in-one `cactus-pangenome --mgSplit`, restartable from its
+  Toil job store, then [D]-[E] with `scripts/index-release.sh`.
+- **Multi-node**: `scripts/submit-staged.sh` submits `scripts/build-staged.sh`
+  as four Slurm jobs, `bin` → `chrom` (array) → `join` → `index`. These are
+  the steps `cactus-pangenome --mgSplit` chains itself, run as separate
+  commands with the same options. Each chromosome's `cactus-minigraph`,
+  `cactus-graphmap` and `cactus-align` run with `--batch` on a one-line
+  chromfile. The input contig sizes that cactus-pangenome hands its join are
+  made by `scripts/cactus-contig-sizes.py` with Cactus's own sanitizer and
+  writer. On the toy, that table and every per-chromosome intermediate
+  (minigraph GFA, PAF, raw vg) are byte-identical to cactus-pangenome's, and
+  so are the release's GBZs, reference and reproducible indexes
+  (`TOY_BUILD=staged TOY_MODE=check tests/toy/build.sh`).
+
+`scripts/check-seqfile.py` refuses a seqfile whose first entry is not GRCh38
+before any compute is spent, in both builds.
+
+Why the multi-node build is needed: in cactus-pangenome, the per-chromosome
+minigraph construction and cactus_consolidated each ask for every core
+(`--mgCores`/`--consCores` default to all), so on one node the chromosomes go
+one after another. On the build site's chr21 pilot (40 haplotypes), the
+construction alone took 4 h 06 min with 128 cores. In the staged build each
+chromosome is an array task with a node of its own (`--chrom-cpus` to share
+nodes), largest first. The construction and the consolidation get the task's
+whole allocation (`--mgCores/--mgMemory`, `--consCores/--consMemory`), because
+Cactus's own memory estimates run 3-4 times above use (chr21: 175-234 GiB
+requested against a 60 GB peak) and would otherwise exceed a task and be
+refused.
+
+What the staged build does differently from the plan above: [B] is one array
+task per chromosome that runs its three steps in turn, rather than three arrays
+chained with `aftercorr`. Each step still has its own job store and a done
+marker, so a failure reruns only that step of that chromosome, on whatever
+node the resubmitted task gets.
 
 - Each task in [B] runs Toil with `--batchSystem single_machine`, with the
   jobStore and `--workDir` on `/scratch` and `--binariesMode local`. This

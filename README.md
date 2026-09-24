@@ -6,13 +6,13 @@ with Minigraph-Cactus. It runs once per pangenome release, whereas pggl-workflow
 runs once per sample. The two differ in how often they change, in the compute
 they need and in their container images, so they live in separate repositories.
 
-> **Status:** a release builds end to end on one node, offline:
-> `sbatch/build-release.sbatch` runs `cactus-pangenome --mgSplit`, then the vg
-> 1.70 indexes, the manifest and the validation. The toy release in
-> [`tests/toy/`](tests/toy/README.md) is built by the same script and passes.
-> The procedure for the air-gapped build site, from collecting the software to
-> bringing a release back, is [`docs/OFFLINE.md`](docs/OFFLINE.md). Multi-node
-> staged jobs ([A]-[C] as Slurm arrays) are next. The design is in
+> **Status:** a release builds end to end, offline, either over several nodes
+> (`scripts/submit-staged.sh`: bin → one Slurm array task per chromosome → join
+> → index) or on one node (`sbatch/build-release.sbatch`). Both give the same
+> release: on the toy in [`tests/toy/`](tests/toy/README.md) they agree byte
+> for byte and pass validation. The procedure for the air-gapped build site,
+> from collecting the software to bringing a release back, is
+> [`docs/OFFLINE.md`](docs/OFFLINE.md). The design is in
 > [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## What a release must satisfy
@@ -70,7 +70,8 @@ Tools/        CWL CommandLineTools, one per stage
 Workflows/    build-pangenome.cwl (toy and single-node runs)
 scripts/      what every Tool and sbatch job actually runs, plus
               validate-graph.sh and prepare_pangenome_indexes.sh
-sbatch/       per-stage Slurm jobs for production builds
+sbatch/       stage.sbatch (one stage of the multi-node build),
+              build-release.sbatch (one node), validate-graph.sbatch
 tests/toy/    a few small FASTAs that run end to end
 tests/compat/ cross-version checks between the Cactus and per-sample images
 schema/       graph.manifest.schema.json

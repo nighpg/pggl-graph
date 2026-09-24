@@ -9,7 +9,7 @@ online host                    build site (air-gapped)                     where
 1. fetch-offline-bundle.sh ─┐
                             ├─▶ 3. setup-offline.sh --verify
 2. assemblies + seqfile  ───┘   4. check-seqfile.py
-                                5. sbatch build-release.sbatch  (days)
+                                5. submit-staged.sh             (days)
                                 6. check the release           ───────▶  7. add a site, check, use
 ```
 
@@ -125,6 +125,15 @@ are exempt, because vg does not build them deterministically. A pass shows
 that the images, apptainer, Slurm and the scripts all work on this site.
 **Do not start step 5 until it passes.**
 
+The toy can also be built the multi-node way, stage by stage on the same node,
+to check that path too (about 7 minutes):
+
+```bash
+srun -p compute001-006 -c 16 --mem 32G env TOY_BUILD=staged TOY_MODE=check \
+    bash pggl-graph/tests/toy/build.sh pggl-graph/cactus_v3.3.0.sif \
+    pggl-graph/deepvariant-opencode-cpu-vg.sif /scratch/$USER/toy-staged
+```
+
 ## 4. Write and check the seqfile
 
 One line per haplotype: a name and the FASTA's path, separated by a tab.
@@ -163,6 +172,89 @@ Run against JaSaPaGe's seqfile, it reports "the first entry is CHM13v2, not
 GRCh38 (it is on line 2)".
 
 ## 5. Build
+
+There are two ways to build, and both produce the same release. On the toy,
+the multi-node build reproduces the one-node build's GBZs, reference and
+indexes byte for byte.
+
+| | Multi-node (`scripts/submit-staged.sh`) | One node (`sbatch/build-release.sbatch`) |
+| --- | --- | --- |
+| Use for | the whole genome | pilots (one or two chromosomes), small builds |
+| Nodes | up to 6: one chromosome per node at a time | 1 |
+| Chromosomes | built in parallel, largest first | one after another (each takes all 128 cores) |
+| Resuming | per step and per chromosome, on any node | from the Toil job store, on the same node |
+
+Why it matters: on the chr21 pilot (40 haplotypes), building the chromosome's
+minigraph alone took 4 hours with all 128 cores. On one node the 25
+chromosomes take their turn at that, one after another.
+
+### Multi-node
+
+Run on the login node. It checks the seqfile, submits four jobs chained by
+dependencies, and returns:
+
+```bash
+cd /home/<user>/pangenome/pggl-graph         # every job reads offline.env from here
+scripts/submit-staged.sh -p compute001-006 \
+    --time-bin 12:00:00 --time-chrom 3-00:00:00 --time-join 1-00:00:00 --time-index 1-00:00:00 \
+    --seqfile ../seqfiles/<name>.txt --name <name> --out ../builds/<name>
+```
+
+```
+bin  ──▶  chrom (array of 25, one task per chromosome)  ──▶  join  ──▶  index
+```
+
+| Stage | Job | What |
+| --- | --- | --- |
+| `bin` | 1 whole node | input contig sizes (for the exclusion report), a reference-only minigraph, every assembly mapped to it, contigs binned by chromosome. It lists the chromosomes largest first |
+| `chrom` | array, 1 whole node per task | per chromosome: `cactus-minigraph`, `cactus-graphmap`, `cactus-align --pangenome`, each given the task's whole node. Task 0 is the largest chromosome |
+| `join` | 1 whole node | `cactus-graphmap-join`: the clip and filter GFAs, the HAL, the exclusion report (`<name>.WARNING`) |
+| `index` | 1 whole node | as in the one-node build: GBZs with vg 1.70, indexes, reference, manifest, validation |
+
+Options worth knowing (`scripts/submit-staged.sh --help` has them all):
+
+- `--chrom-cpus 64` runs two chromosomes per node (12 at once on 6 nodes). It
+  has more parallelism, but half the memory per chromosome. Start with whole
+  nodes until the memory of the largest chromosome is known.
+- `--max-running N` caps how many chromosome tasks run at once, to leave nodes
+  for others.
+- `--tasks N` is the array size (default 25). Tasks without a chromosome exit
+  at once, so a pilot with `CACTUS_EXTRA='--refContigs chr21'` needs no change.
+- `--from chrom|join|index` resumes the chain at a stage. A failed stage
+  leaves the later jobs pending with `DependencyNeverSatisfied`: `scancel`
+  them, fix the cause, and resubmit with `--from <failed stage>`. Steps that
+  finished are skipped, including the chromosomes that finished, so rerunning
+  the whole array costs only the chromosomes that failed.
+- `--dry-run` prints the `sbatch` commands without submitting.
+
+Other build settings (`CACTUS_EXTRA`, `RELEASE_LABEL`, `BUILD_NOTE`,
+`WORKROOT`) are read from the submitting shell's environment, so export them
+first. Values with commas or spaces need no quoting.
+
+Where things go:
+
+```
+builds/<name>/
+├── cactus/
+│   ├── <name>.input-contig-sizes.tsv.gz, <name>.sv.gfa.gz, <name>.paf   (bin)
+│   ├── chrom-subproblems/, chroms.txt                                     (bin)
+│   ├── chroms/<chrom>/{minigraph,graphmap,align}/                         (chrom)
+│   └── <name>.gfa.gz, <name>.d2.gfa.gz, <name>.full.hal, <name>.WARNING   (join)
+├── release/                        (index; as in step 6)
+└── logs/
+    ├── slurm/<stage>-<jobid>[_<task>].out, jobs.txt
+    └── <stage>/<step>.log          one Cactus log per step
+```
+
+Watching it:
+
+```bash
+squeue -u $USER -n pggl-<name>-bin,pggl-<name>-chrom,pggl-<name>-join,pggl-<name>-index
+tail -f ../builds/<name>/logs/slurm/chrom-<jobid>_0.out     # the largest chromosome
+ls ../builds/<name>/cactus/chroms/*/align/*.hal              # chromosomes finished so far
+```
+
+### One node
 
 ```bash
 cd /home/<user>/pangenome/pggl-graph
