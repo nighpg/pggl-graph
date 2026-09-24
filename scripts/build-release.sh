@@ -17,7 +17,8 @@
 #   CACTUS_SIF, VG_SIF   the images (required)
 #   THREADS              cores for Cactus and vg (default: the Slurm allocation, else nproc)
 #   MEM                  memory ceiling for Toil and vg autoindex, e.g. 950G
-#                        (default: 95% of the Slurm allocation; required outside Slurm)
+#                        (default: 95% of what the job may use: the Slurm
+#                        allocation, else the job's cgroup limit, else the RAM)
 #   WORKROOT             fast local scratch for Toil's work dir and vg's
 #                        temporaries (default: /scratch/$USER/pggl-graph-<name>
 #                        when /scratch exists, else <outdir>/work)
@@ -63,10 +64,38 @@ if [ "$THREADS" -gt "$avail" ]; then
     echo "  (under Slurm, ask for the CPUs: srun/sbatch -c <n>)" >&2
     THREADS=$avail
 fi
+# Memory this job may use, in MB: Slurm's figure when it gives one, else the
+# job's cgroup limit, else the machine's RAM. Slurm leaves SLURM_MEM_PER_NODE
+# unset where it does not manage memory (the build site does not, even with
+# --mem=0), so the other two are not just for runs outside Slurm.
+available_mem_mb() {
+    local total lim="" line dir f v
+    total=$(awk '/^MemTotal:/ {print int($2 / 1024)}' /proc/meminfo)
+    if [ -n "${SLURM_MEM_PER_NODE:-}" ] && [ "$SLURM_MEM_PER_NODE" -gt 0 ] 2>/dev/null; then
+        lim=$SLURM_MEM_PER_NODE
+    else
+        # The limit sits on an ancestor (Slurm puts it on job_<id>, the
+        # process lives in .../step_0/user/task_0), so walk up to the root and
+        # keep the smallest. cgroup v2: "0::/path"; v1: "<n>:memory:/path".
+        while IFS=: read -r _ ctrl path; do
+            if [ -z "$ctrl" ]; then dir=/sys/fs/cgroup$path; f=memory.max
+            elif [[ ",$ctrl," == *,memory,* ]]; then dir=/sys/fs/cgroup/memory$path; f=memory.limit_in_bytes
+            else continue; fi
+            while :; do
+                if [ -r "$dir/$f" ]; then
+                    v=$(awk '$1 ~ /^[0-9]+$/ {print int($1 / 1048576)}' "$dir/$f")
+                    if [ -n "$v" ] && { [ -z "$lim" ] || [ "$v" -lt "$lim" ]; }; then lim=$v; fi
+                fi
+                case $dir in /sys/fs/cgroup|/sys/fs/cgroup/memory|/) break ;; esac
+                dir=${dir%/*}
+            done
+        done < /proc/self/cgroup
+    fi
+    if [ -z "$lim" ] || [ "$lim" -gt "$total" ]; then lim=$total; fi
+    echo "$lim"
+}
 if [ -z "${MEM:-}" ]; then
-    [ -n "${SLURM_MEM_PER_NODE:-}" ] \
-        || { echo "build-release.sh: set MEM (e.g. 950G) outside a Slurm job" >&2; exit 1; }
-    MEM="$((SLURM_MEM_PER_NODE * 95 / 100 / 1024))G"
+    MEM="$(( $(available_mem_mb) * 95 / 100 / 1024 ))G"
 fi
 mkdir -p "$OUT"/{cactus,release,logs}
 OUT=$(cd "$OUT" && pwd)
@@ -151,8 +180,12 @@ EOF
 
 # --- [D]-[E]: vg indexes, reference, manifest, validation ------------------
 log "index-release.sh"
-rev=$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)
-git -C "$REPO" diff --quiet HEAD 2>/dev/null || rev="$rev-dirty"
+# git may be missing on compute nodes; offline.env then carries the bundle's commit
+if rev=$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null); then
+    git -C "$REPO" diff --quiet HEAD 2>/dev/null || rev="$rev-dirty"
+else
+    rev=${PGGL_GRAPH_REV:-unknown}
+fi
 rc=0
 "$AP" exec --cleanenv --bind "$(binds "$REPO" "$OUT" "$WORKROOT" "$(dirname "$REF_FASTA")")" \
     --env TMPDIR="$WORKROOT",SITE="${SITE:-build}",SITE_ROOT="${SITE_ROOT:-}",RELEASE_LABEL="${RELEASE_LABEL:-}",TARGET_MEM="$MEM",PGGL_GRAPH_REV="$rev",INDEX_IMAGE_REF="$(basename "$VG_SIF")",INDEX_IMAGE_SHA256="$(sha256sum "$VG_SIF" | cut -d' ' -f1)" \

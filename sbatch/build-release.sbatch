@@ -42,8 +42,8 @@ fi
 
 echo "host      : $(hostname)"
 echo "job       : ${SLURM_JOB_ID:-none}"
-echo "cpus / mem: ${SLURM_CPUS_PER_TASK:-?} / ${SLURM_MEM_PER_NODE:-?} MB"
-echo "repo      : $REPO @ $(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+echo "cpus / mem: ${SLURM_CPUS_PER_TASK:-?} / ${SLURM_MEM_PER_NODE:-not set by Slurm; build-release.sh reads the cgroup or RAM} MB"
+echo "repo      : $REPO @ $(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo "${PGGL_GRAPH_REV:-unknown} (no git; from offline.env)")"
 echo "seqfile   : $SEQFILE"
 echo "output    : $OUT ($NAME)"
 echo "started   : $(date -Is)"

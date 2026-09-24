@@ -294,6 +294,7 @@ python3 scripts/manifest.py job releases/<name>/graph.manifest.json --site nig-l
 | `check-seqfile.py`: "the first entry is ..." | Move the `GRCh38` line to the top |
 | `check-seqfile.py`: "contigs beyond the expected 25" | GRCh38 is the full analysis set: use `GRCh38.primary.fa` |
 | `InsufficientSystemResources: ... requesting N cores, more than the maximum of 1` | The job had fewer CPUs than `THREADS` asked for. Fixed: `THREADS` is now capped at the CPUs available, but give the job its CPUs with `srun -c` / `sbatch -c` |
+| `build-release.sh: set MEM (e.g. 950G) outside a Slurm job` (log shows `mem: ? MB`) | The build site's Slurm does not set `SLURM_MEM_PER_NODE`. Fixed: the memory now comes from the job's cgroup limit or the node's RAM. With the old code, add `MEM=950G` to `--export` |
 | `apptainer not found` | Not on PATH on the compute node: set `APPTAINER=/opt/pkg/apptainer/<ver>/bin/apptainer` |
 | A resumed build starts Cactus from the beginning | It landed on another node, whose `/scratch` has no job store. Resubmit with `-w <first node>`, or put `JOBSTORE` on `/home` from the start |
 | `/scratch` full | Set `JOBSTORE` (and, if needed, `WORKROOT`) under `/home` and start over |

@@ -75,11 +75,14 @@ if ls "$BUNDLE"/reference/* >/dev/null 2>&1; then
 fi
 
 log "4. offline.env"
+bundle_rev=$(awk '$1 == "repository" {print $2}' "$BUNDLE/BUNDLE_INFO.txt")
 cat > "$R/offline.env" <<EOF
 # written by setup-offline.sh on $(date -Is); source it before a build
 CACTUS_SIF=$cactus_sif
 VG_SIF=$vg_sif
 GRCH38_PRIMARY=$DEST/reference/GRCh38.primary.fa
+# the bundle's commit, recorded in manifests where git is not available
+PGGL_GRAPH_REV=$bundle_rev
 EOF
 cat "$R/offline.env"
 
