@@ -8,6 +8,9 @@ features a real build has to get right:
   - chrY starts with 2 kb of N, like the hard-masked PAR of the GRCh38
     analysis set, so the md5 check of the reference extracted from the graph
     has something to trip over
+  - three IUPAC ambiguity codes in GRCh38 (M, R, Y), like the 94 in the real
+    primary contigs: vg stores them as N, so the extracted reference differs
+    from the source there, and the check must allow exactly that
   - SNPs and small indels in every haplotype, SVs at different frequencies:
     the singleton ones (one haplotype) are what the filter graph drops
   - CHM13 as an ordinary haplotype sample, not a reference
@@ -103,8 +106,16 @@ def write_fasta(path, records):
                 f.write((seq[i:i + 80] + "\n").encode())
 
 
+# IUPAC codes go into the written reference only, after every random draw,
+# so the haplotypes (derived from the plain bases) and the rest of the inputs
+# do not change
+IUPAC = [("chr20", 12345, "M"), ("chr20", 36789, "R"), ("chrX", 15000, "Y")]
+written = dict(ref)
+for c, pos, code in IUPAC:
+    written[c] = written[c][:pos] + code + written[c][pos + 1:]
+
 os.makedirs(OUT, exist_ok=True)
-write_fasta(os.path.join(OUT, "GRCh38.fa.gz"), [(c, ref[c]) for c, _ in CONTIGS])
+write_fasta(os.path.join(OUT, "GRCh38.fa.gz"), [(c, written[c]) for c, _ in CONTIGS])
 seqfile = ["GRCh38\tGRCh38.fa.gz"]
 for h in HAPS:
     recs = []

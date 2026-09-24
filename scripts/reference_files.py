@@ -14,10 +14,16 @@ Writes:
 Contigs keep the source FASTA's order when one is given (so chr1..chr22, X, Y,
 M rather than whatever order the graph stores), the graph's order otherwise.
 
-With a source FASTA, every graph contig must be in it with the same M5 (md5
-of the upper-cased sequence, as in a sequence dictionary and in CRAM). The
+With a source FASTA, every graph contig must be in it with the same sequence,
+compared by M5 (md5 of the upper-cased sequence, as in a sequence dictionary
+and in CRAM), except that IUPAC ambiguity codes in the source (M, R, Y, ...)
+are N in the graph: vg stores only A, C, G, T and N, and Minigraph-Cactus
+converts them. GRCh38's primary contigs carry 94 such codes (3 of them on
+chr21), so 14 of its 25 contigs never match as they are; they are compared
+with the codes turned into N, and the number of codes is reported. The
 source may hold more contigs (decoys, alts); those are listed, not errors.
-Exit 1 on any mismatch.
+Exit 1 on any other difference. <outprefix>.source-check.tsv records, per
+contig, the length, the source's M5, the graph's M5 and the codes that became N.
 
 The M5 sums also go into both .dict files. That is what lets a FASTA that
 holds more than the reference contigs -- the full analysis set the CRAMs were
@@ -28,7 +34,10 @@ refers to.
 """
 import gzip
 import hashlib
+import re
 import sys
+
+NOT_ACGTN = re.compile("[^ACGTN]")
 
 
 def read_fasta(path):
@@ -51,6 +60,12 @@ def m5(seq):
     return hashlib.md5(seq.upper().encode()).hexdigest()
 
 
+def as_stored(seq):
+    """The sequence as vg stores it: upper case, IUPAC codes as N.
+    Returns it and the number of codes turned into N."""
+    return NOT_ACGTN.subn("N", seq.upper())
+
+
 def main(graph_fa, prefix, out, source=None):
     graph = {}
     graph_order = []
@@ -67,23 +82,35 @@ def main(graph_fa, prefix, out, source=None):
     fail = 0
     if source:
         src_order = []
-        src_m5 = {}
+        src = {}   # contig -> (length, M5 as is, M5 as vg stores it, IUPAC codes)
         for name, seq in read_fasta(source):
             src_order.append(name)
-            src_m5[name] = (len(seq), m5(seq))
+            if name in graph:
+                stored, k = as_stored(seq)
+                src[name] = (len(seq), m5(seq), m5(stored), k)
+            else:
+                src[name] = None
         order = [c for c in src_order if c in graph]
+        check = open(out + ".source-check.tsv", "w")
+        check.write("contig\tlength\tsource_m5\tgraph_m5\tiupac_as_n\n")
         for c in graph_order:
-            if c not in src_m5:
+            if src.get(c) is None:
                 print("FAIL  %s: not in %s" % (c, source))
                 fail += 1
                 continue
-            n, h = src_m5[c]
-            if (n, h) != (len(graph[c]), m5(graph[c])):
-                print("FAIL  %s: graph %d bp M5 %s, source %d bp M5 %s"
-                      % (c, len(graph[c]), m5(graph[c]), n, h))
+            n, h_src, h_stored, k = src[c]
+            h_graph = m5(graph[c])
+            check.write("%s\t%d\t%s\t%s\t%d\n" % (c, n, h_src, h_graph, k))
+            if n != len(graph[c]) or h_stored != h_graph:
+                print("FAIL  %s: graph %d bp M5 %s, source %d bp M5 %s (%s with IUPAC codes as N)"
+                      % (c, len(graph[c]), h_graph, n, h_src, h_stored))
                 fail += 1
+            elif k:
+                print("OK    %s %d bp M5 %s; the source's %d IUPAC code(s) are N in the graph "
+                      "(source M5 %s)" % (c, n, h_graph, k, h_src))
             else:
-                print("OK    %s %d bp M5 %s" % (c, n, h))
+                print("OK    %s %d bp M5 %s" % (c, n, h_graph))
+        check.close()
         extra = [c for c in src_order if c not in graph]
         if extra:
             print("note  %d source contigs are not reference paths of the graph (%s%s)"

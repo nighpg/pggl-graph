@@ -11,7 +11,7 @@
   },
   "build": {
     "method": "minigraph-cactus",
-    "date": "2026-09-24",
+    "date": "2026-09-25",
     "cactus_version": "3.3.0",
     "toil_version": "9.5.0",
     "cactus_image": {
@@ -38,7 +38,7 @@
         "filter"
       ]
     },
-    "note": "tests/toy: synthetic assemblies from make_inputs.py, all-in-one cactus-pangenome",
+    "note": "tests/toy: synthetic assemblies from make_inputs.py",
     "seqfile": {
       "root": "release",
       "path": "toy.seqfile.txt",
@@ -68,7 +68,7 @@
       "root": "release",
       "path": "toy.ref.fa",
       "size": 101693,
-      "md5": "119cf40a21ba87e1f80f53247d31646b",
+      "md5": "067b713b71f7a6ec4a19251be5a7cc6e",
       "producer": {
         "tool": "pggl-graph reference_files.py",
         "version": null
@@ -89,7 +89,7 @@
       "root": "release",
       "path": "toy.ref.dict",
       "size": 251,
-      "md5": "ff52f535854664403e542da425c79f34",
+      "md5": "c33ec2bc0a6c4c6f409e96b703a42dd4",
       "producer": {
         "tool": "pggl-graph reference_files.py",
         "version": null
@@ -99,7 +99,7 @@
       "root": "release",
       "path": "toy.ref.pansn.dict",
       "size": 287,
-      "md5": "a99110ca9ad3585e6526929b570ead02",
+      "md5": "44f6929ac2c448fd2767f82966480e5b",
       "producer": {
         "tool": "pggl-graph reference_files.py",
         "version": null
@@ -107,10 +107,22 @@
     },
     "fasta_source": "graph",
     "fasta_matches_graph": true,
+    "iupac_as_n": 3,
+    "source_check": {
+      "root": "release",
+      "path": "toy.ref.source-check.tsv",
+      "size": 360,
+      "md5": "999cf85c56d468e6957856d8ada66bba",
+      "producer": {
+        "tool": "pggl-graph reference_files.py",
+        "version": null
+      },
+      "note": "per contig: length, source M5, graph M5, IUPAC codes stored as N"
+    },
     "source_fasta": {
       "name": "GRCh38.fa.gz",
-      "size": 30918,
-      "md5": "f245683691a1a4fbf9cc789a82bbd802"
+      "size": 30924,
+      "md5": "489116cd90676536c4e59a2ef00b8beb"
     }
   },
   "graphs": {
@@ -118,8 +130,8 @@
       "gbz": {
         "root": "release",
         "path": "toy.clip.gbz",
-        "size": 130048,
-        "md5": "d309ac7306ba7345a41186ce6a11d042",
+        "size": 130176,
+        "md5": "a08e8edfc4d44cb966bb5fd78feca3a6",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -129,8 +141,8 @@
       "dist": {
         "root": "release",
         "path": "toy.clip.dist",
-        "size": 188144,
-        "md5": "f4e9944afa3cd7564285ca1763a5d29a",
+        "size": 188408,
+        "md5": "2eaa3ee084f308f15107ec9e3506b64b",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -139,8 +151,8 @@
       "snarls": {
         "root": "release",
         "path": "toy.clip.snarls",
-        "size": 10803,
-        "md5": "32dfa312b02be8705a34c1b74d14d341",
+        "size": 10818,
+        "md5": "98224f519b88562d7511afb4c821e73e",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -149,8 +161,8 @@
       "ri": {
         "root": "release",
         "path": "toy.clip.ri",
-        "size": 114669,
-        "md5": "6403a6f8f3b10298201cd08507da5dc5",
+        "size": 114861,
+        "md5": "29fdaecb20aaeeaaf1ada392aab3f593",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -160,8 +172,8 @@
       "hapl": {
         "root": "release",
         "path": "toy.clip.hapl",
-        "size": 182800,
-        "md5": "1110ad6f0ea56c027f3b148dab5de242",
+        "size": 182928,
+        "md5": "ce053bdd00909ef28c2f80e139f9ec4e",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -177,8 +189,8 @@
       "gbz": {
         "root": "release",
         "path": "toy.filter.gbz",
-        "size": 168760,
-        "md5": "da68bbbb5066150e1c8420b65a1a9b27",
+        "size": 168864,
+        "md5": "aaff2c6c1ec48e50c42ba833acb0c170",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -188,8 +200,8 @@
       "dist": {
         "root": "release",
         "path": "toy.filter.dist",
-        "size": 67496,
-        "md5": "a01e9b725cac778951a392e2e62112d9",
+        "size": 67696,
+        "md5": "724c86a15d8308e2a3d426a836560009",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -199,7 +211,7 @@
         "root": "release",
         "path": "toy.filter.min",
         "size": 1048704,
-        "md5": "45fb46a6908b790f609f98d7538b3cad",
+        "md5": "a3860ece66444d3104edae75d791b233",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -209,8 +221,8 @@
       "zipcodes": {
         "root": "release",
         "path": "toy.filter.zipcodes",
-        "size": 4721,
-        "md5": "9bc788ab2bf4ddc4894a54f834ac57ae",
+        "size": 4855,
+        "md5": "7a977e5ca301ed3f073c05567b9967e9",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -219,8 +231,8 @@
       "snarls": {
         "root": "release",
         "path": "toy.filter.snarls",
-        "size": 295,
-        "md5": "6343c480bce34de694af0b20735fe1d3",
+        "size": 314,
+        "md5": "c1b903e8c46bc9dda39ef2ab099c220d",
         "producer": {
           "tool": "vg",
           "version": "v1.70.0"
@@ -240,8 +252,8 @@
   },
   "validation": {
     "status": "pass",
-    "date": "2026-09-24",
-    "validator": "scripts/validate-graph.sh @ pggl-graph c2cbe3d",
+    "date": "2026-09-25",
+    "validator": "scripts/validate-graph.sh @ pggl-graph eb1296e-dirty",
     "vg_version": "v1.70.0",
     "graph": "filter",
     "checks": [
@@ -267,7 +279,7 @@
         "id": "4/clip",
         "name": "readable",
         "status": "pass",
-        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; ri R-index v1; hapl Haplotypes v5; snarls ok (2068 records); hapl loads against the gbz"
+        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; ri R-index v1; hapl Haplotypes v5; snarls ok (2071 records); hapl loads against the gbz"
       },
       {
         "id": "1/filter",
@@ -291,7 +303,7 @@
         "id": "4/filter",
         "name": "readable",
         "status": "pass",
-        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; min MinimizerIndex v11; zipcodes ZipCodeCollection; snarls ok (32 records)"
+        "detail": "gbz GBZ v1; dist SnarlDistanceIndex; min MinimizerIndex v11; zipcodes ZipCodeCollection; snarls ok (35 records)"
       },
       {
         "id": "5a",

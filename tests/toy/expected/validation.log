@@ -1,14 +1,14 @@
-validate-graph.sh toy toy (site toy) with vg v1.70.0, pggl-graph c2cbe3d
+validate-graph.sh toy toy (site toy) with vg v1.70.0, pggl-graph eb1296e-dirty
 manifest index_builder.vg_version: v1.70.0
 
 1/clip paths     pass 4 GRCh38 paths, no fragment names
 2/clip lengths   pass all 4 contigs are whole paths with the .fai length
 3/clip tags      pass reference_samples = GRCh38
-4/clip readable  pass gbz GBZ v1; dist SnarlDistanceIndex; ri R-index v1; hapl Haplotypes v5; snarls ok (2068 records); hapl loads against the gbz
+4/clip readable  pass gbz GBZ v1; dist SnarlDistanceIndex; ri R-index v1; hapl Haplotypes v5; snarls ok (2071 records); hapl loads against the gbz
 1/filter paths     pass 4 GRCh38 paths, no fragment names
 2/filter lengths   pass all 4 contigs are whole paths with the .fai length
 3/filter tags      pass reference_samples = GRCh38
-4/filter readable  pass gbz GBZ v1; dist SnarlDistanceIndex; min MinimizerIndex v11; zipcodes ZipCodeCollection; snarls ok (32 records)
+4/filter readable  pass gbz GBZ v1; dist SnarlDistanceIndex; min MinimizerIndex v11; zipcodes ZipCodeCollection; snarls ok (35 records)
 check 5: 1000 pairs simulated from GRCh38#0#chr20
 5a    surject   pass PanSN .dict: 4 @SQ, 2000/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length
 5b    surject   pass plain path list: 4 @SQ, 2000/2000 reads placed; every @SQ is GRCh38#0#<contig> with the .fai length

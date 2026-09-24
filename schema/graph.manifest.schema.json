@@ -111,8 +111,14 @@
         },
         "fasta_matches_graph": {
           "type": ["boolean", "null"],
-          "description": "Every reference contig of the graph has the same md5 as in fasta. null: not checked."
+          "description": "Every reference contig of the graph has the same sequence as the source FASTA, IUPAC codes aside (see iupac_as_n). null: not checked."
         },
+        "iupac_as_n": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "IUPAC ambiguity codes of the source FASTA that the graph stores as N (vg keeps only ACGTN). GRCh38's 25 primary contigs have 94. fasta_matches_graph holds modulo these."
+        },
+        "source_check": {"$ref": "#/definitions/file"},
         "source_fasta": {
           "type": "object",
           "description": "The linear FASTA the reference was built from and fasta was checked against (M5 of every contig). It lives outside the release, so it is identified, not located.",

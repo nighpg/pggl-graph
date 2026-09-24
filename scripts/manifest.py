@@ -252,8 +252,9 @@ def cmd_job(a):
 
 def check_cram_reference(pansn_dict, prefix, fasta):
     """Every contig of the release's reference must be in `fasta` with the M5
-    the release's .dict records. Other contigs (decoys, HLA) are what the
-    FASTA is for, and are ignored."""
+    the release's .dict records, once IUPAC codes are read as N (the graph
+    stores them as N; see reference_files.py). Other contigs (decoys, HLA)
+    are what the FASTA is for, and are ignored."""
     want = {}
     for line in open(pansn_dict):
         if line.startswith("@SQ"):
@@ -262,11 +263,11 @@ def check_cram_reference(pansn_dict, prefix, fasta):
                 sys.exit("%s has no M5 tags, so %s cannot be checked against it" % (pansn_dict, fasta))
             want[t["SN"][len(prefix):]] = t["M5"]
     sys.path.insert(0, HERE)
-    from reference_files import read_fasta, m5
+    from reference_files import read_fasta, m5, as_stored
     got = {}
     for name, seq in read_fasta(fasta):
         if name in want:
-            got[name] = m5(seq)
+            got[name] = m5(as_stored(seq)[0])
     bad = [c for c in want if got.get(c) != want[c]]
     if bad:
         sys.exit("%s does not match the release on %s (missing, or a different sequence)"

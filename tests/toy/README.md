@@ -17,7 +17,7 @@ to check in (about 2 MB). It serves three purposes:
 
 | Haplotype | What it exercises |
 | --- | --- |
-| `GRCh38` | the only `--reference`: chr20 50 kb, chrX 30 kb, chrY 15 kb (first 2 kb N, like the masked PAR), chrM 5 kb |
+| `GRCh38` | the only `--reference`: chr20 50 kb, chrX 30 kb, chrY 15 kb (first 2 kb N, like the masked PAR), chrM 5 kb; three IUPAC codes, like the 94 in the real primary contigs |
 | `CHM13` | an ordinary haplotype sample, not a second reference |
 | `S1.1`, `S1.2` | `S1.2` has a 6 kb contig that belongs to no chromosome |
 | `S2.1`, `S2.2` | `S2.1` has chr20 broken into two contigs |
@@ -36,7 +36,9 @@ five haplotypes.
 
 - `validate-graph.sh` passes every check on both graphs (see `validation.log`).
 - GRCh38 is 4 whole paths, and the reference extracted from the graph is
-  M5-identical to `input/GRCh38.fa.gz`, N run included.
+  identical to `input/GRCh38.fa.gz`, N run included, except at the three IUPAC
+  codes (M, R, Y), which vg stores as N. `toy.ref.source-check.tsv` lists both
+  M5 sums per contig, and the manifest records `iupac_as_n: 3`.
 - Cactus writes `toy.WARNING` about `S1_2_ctg_unplaced` (6000 bp in no graph).
   That is the intended outcome for a contig that maps to no chromosome, not a
   fault.

@@ -155,7 +155,14 @@ For scale, JaSaPaGe (134 haplotypes) produced `chr1.hal` 10 GB and `chr1.vg`
   25 primary contigs (chr1-22, X, Y, M) of
   `GRCh38_full_analysis_set_plus_decoy_hla.fa`, with no decoy, alt, HLA or EBV
   contigs, so the graph has exactly 25 GRCh38 paths. Their sequences
-  (PAR masking included) are M5-identical to that FASTA.
+  (PAR masking included) are identical to that FASTA except at its 94 IUPAC
+  ambiguity codes (3 on chr21, 36 on chr10, 14 contigs in all), which vg
+  stores as N. The first pilot on the build site stopped on exactly that: the
+  graph's chr21 had the source's length but not its M5, and turning the
+  source's three codes into N reproduced the graph's M5. The reference check
+  therefore compares with IUPAC codes read as N, records their number
+  (`reference.iupac_as_n`) and a per-contig table (`<name>.ref.source-check.tsv`),
+  and fails on any other difference.
 - **`ref` for CRAM input is the full FASTA, not the graph's.** pggl-workflow
   decodes CRAMs with its `ref` input, and htslib needs every contig a CRAM has
   reads on. A WGS CRAM against the analysis set has reads on decoys and HLA.

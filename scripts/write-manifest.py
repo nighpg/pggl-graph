@@ -149,6 +149,12 @@ def main():
         # extract-reference.sh stops when any contig differs from the source
         "fasta_matches_graph": True,
     }
+    check = os.path.join(R, "%s.ref.source-check.tsv" % a.name)
+    if os.path.exists(check):
+        rows = [l.rstrip("\n").split("\t") for l in open(check)][1:]
+        reference["iupac_as_n"] = sum(int(r[4]) for r in rows)
+        reference["source_check"] = entry(os.path.basename(check), rp,
+            note="per contig: length, source M5, graph M5, IUPAC codes stored as N")
     if a.source_fasta:
         reference["source_fasta"] = {
             "name": os.path.basename(a.source_fasta),
