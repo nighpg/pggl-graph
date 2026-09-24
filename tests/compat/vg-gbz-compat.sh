@@ -45,8 +45,8 @@ W	S1	1	ctgA	0	21	>1>3>4
 W	S1	2	ctgB	0	21	>1>2>4
 EOF
 
-echo "producer: $(new vg version | head -1)"
-echo "consumer: $(old vg version | head -1)"
+echo "producer: $(new vg version | awk 'NR == 1')"
+echo "consumer: $(old vg version | awk 'NR == 1')"
 
 new vg gbwt -G toy.gfa --gbz-format -g new.gbz 2>/dev/null
 new vg snarls new.gbz > new.snarls 2>/dev/null
@@ -64,7 +64,8 @@ check "consumer reads producer snarls"      old vg view -R new.snarls
 # The route around it: drop every H line but the first, keep the GFA plain.
 awk '!/^H/ || !seen++' new.gfa > fixed.gfa
 check "consumer builds GBZ from fixed GFA"  old vg gbwt -G fixed.gfa --gbz-format -g old.gbz
-if old vg gbwt -Z old.gbz --tags 2>/dev/null | grep -qP '^reference_samples\tGRCh38$'; then
+tags=$(old vg gbwt -Z old.gbz --tags 2>/dev/null)
+if grep -qP '^reference_samples\tGRCh38$' <<< "$tags"; then
     echo "PASS  reference_samples survives the GFA route"
 else
     echo "FAIL  reference_samples survives the GFA route"

@@ -96,7 +96,7 @@ fi
 got=$("$AP" exec "$CACTUS_SIF" bash -c 'pip list 2>/dev/null | awk "/^Cactus /{print \$2}"')
 [ "$got" = "$CACTUS_VERSION" ] \
     || { echo "$CACTUS_SIF holds Cactus '$got', not $CACTUS_VERSION" >&2; exit 1; }
-vg_version=$("$AP" exec "$VG_SIF" vg version | head -1 | awk '{print $3}')
+vg_version=$("$AP" exec "$VG_SIF" vg version | awk 'NR == 1 {print $3}')
 log "images: Cactus $got ($(basename "$CACTUS_SIF")), vg $vg_version ($(basename "$VG_SIF"))"
 cp -f "$CACTUS_SIF" "$OUTDIR/sif/"
 cp -f "$VG_SIF" "$OUTDIR/sif/"

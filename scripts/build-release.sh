@@ -53,6 +53,16 @@ AP=${APPTAINER:-$(command -v apptainer || command -v singularity || ls -d /opt/p
 [ -x "$AP" ] || { echo "build-release.sh: apptainer not found; set APPTAINER" >&2; exit 1; }
 
 THREADS=${THREADS:-${SLURM_CPUS_PER_TASK:-$(nproc)}}
+# Toil caps itself at the CPUs this process may run on (the Slurm allocation),
+# and a job asking for more than that kills the workflow outright
+# (InsufficientSystemResources: cactus_cons requesting 16 cores, more than the
+# maximum of 1). So THREADS may never exceed what is really there.
+avail=$(nproc)
+if [ "$THREADS" -gt "$avail" ]; then
+    echo "build-release.sh: THREADS=$THREADS but only $avail CPU(s) available here; using $avail" >&2
+    echo "  (under Slurm, ask for the CPUs: srun/sbatch -c <n>)" >&2
+    THREADS=$avail
+fi
 if [ -z "${MEM:-}" ]; then
     [ -n "${SLURM_MEM_PER_NODE:-}" ] \
         || { echo "build-release.sh: set MEM (e.g. 950G) outside a Slurm job" >&2; exit 1; }

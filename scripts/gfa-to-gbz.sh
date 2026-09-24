@@ -31,13 +31,16 @@ case $IN in
 esac
 "${reader[@]}" | awk '!/^H/ || !seen++' > "$TMP/graph.gfa"
 
-head -1 "$TMP/graph.gfa" | grep -q '^H' \
+[ "$(head -c 1 "$TMP/graph.gfa")" = H ] \
     || { echo "gfa-to-gbz.sh: $IN has no header line" >&2; exit 1; }
 
 vg gbwt -G "$TMP/graph.gfa" --gbz-format -g "$OUT" --num-threads "$THREADS"
 
-vg describe "$OUT" | grep -q '^  Version 1$' \
-    || { echo "gfa-to-gbz.sh: $OUT is not a GBZ v1" >&2; exit 1; }
+# Read vg's whole output before testing it: `vg describe | grep -q` under
+# pipefail fails at random, when grep stops reading and vg dies of SIGPIPE.
+desc=$(vg describe "$OUT")
+grep -q '^  Version 1$' <<< "$desc" \
+    || { echo "gfa-to-gbz.sh: $OUT is not a GBZ v1" >&2; printf '%s\n' "$desc" >&2; exit 1; }
 if [ -n "$REF_SAMPLE" ]; then
     rs=$(vg gbwt -Z "$OUT" --tags | awk -F'\t' '$1 == "reference_samples" {print $2}')
     [[ " $rs " == *" $REF_SAMPLE "* ]] \

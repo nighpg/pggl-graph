@@ -37,17 +37,24 @@ if [ "${TOY_MODE:-update}" = check ]; then
     echo "== compare with expected/ ($(date -Is))"
     # the distance indexes and the minimizer index are not deterministic
     # across threads; everything else must come out byte for byte
+    if [ ! -f "$WORK/release/graph.manifest.json" ]; then
+        echo "BUILD FAILED (exit $rc) before a release was written; nothing to compare."
+        echo "The cause is above; the Cactus log is $WORK/logs/cactus.log"
+        exit 3
+    fi
     diffs=0
     for f in "$TOY"/expected/toy.*; do
         b=$(basename "$f")
         case $b in *.dist|*.min) continue ;; esac
-        if cmp -s "$f" "$WORK/release/$b"; then
+        if [ ! -f "$WORK/release/$b" ]; then
+            echo "MISSING  $b"; diffs=$((diffs + 1))
+        elif cmp -s "$f" "$WORK/release/$b"; then
             echo "same  $b"
         else
             echo "DIFF  $b"; diffs=$((diffs + 1))
         fi
     done
-    echo "validation: exit $rc; differing files: $diffs"
+    echo "validation: exit $rc; differing or missing files: $diffs"
     echo "workdir: $WORK"
     [ "$rc" -eq 0 ] && [ "$diffs" -eq 0 ] && exit 0
     exit 3

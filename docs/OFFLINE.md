@@ -112,6 +112,11 @@ VG_SIF=/home/<user>/pangenome/pggl-graph/deepvariant-opencode-cpu-vg.sif
 GRCH38_PRIMARY=/home/<user>/pangenome/reference/GRCh38.primary.fa
 ```
 
+Give the job CPUs with `-c`: the toy uses as many as the job has (`nproc`).
+Before this was fixed, a job without `-c` failed in Cactus with
+`InsufficientSystemResources: ... requesting 16.0 cores, more than the maximum
+of 1`.
+
 `--verify` builds the toy release from the checked-in assemblies with the same
 script as step 5, in `/scratch/$USER/pggl-graph-toy`, which takes about 3
 minutes. It passes only when validation passes **and** every reproducible file
@@ -288,6 +293,7 @@ python3 scripts/manifest.py job releases/<name>/graph.manifest.json --site nig-l
 | `--verify` shows `DIFF` for a GBZ or `toy.ref.*` | A different image than the bundled one, or a modified checkout. Reinstall from the bundle |
 | `check-seqfile.py`: "the first entry is ..." | Move the `GRCh38` line to the top |
 | `check-seqfile.py`: "contigs beyond the expected 25" | GRCh38 is the full analysis set: use `GRCh38.primary.fa` |
+| `InsufficientSystemResources: ... requesting N cores, more than the maximum of 1` | The job had fewer CPUs than `THREADS` asked for. Fixed: `THREADS` is now capped at the CPUs available, but give the job its CPUs with `srun -c` / `sbatch -c` |
 | `apptainer not found` | Not on PATH on the compute node: set `APPTAINER=/opt/pkg/apptainer/<ver>/bin/apptainer` |
 | A resumed build starts Cactus from the beginning | It landed on another node, whose `/scratch` has no job store. Resubmit with `-w <first node>`, or put `JOBSTORE` on `/home` from the start |
 | `/scratch` full | Set `JOBSTORE` (and, if needed, `WORKROOT`) under `/home` and start over |

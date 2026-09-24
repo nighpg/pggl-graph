@@ -50,7 +50,7 @@ RES=$OUT/checks.tsv
 RESOLVED=$(python3 "$HERE/manifest.py" resolve "$MANIFEST" --site "$SITE") || exit 1
 eval "$RESOLVED"
 
-VG_VERSION=$(vg version | head -1 | awk '{print $3}')
+VG_VERSION=$(vg version | awk 'NR == 1 {print $3}')
 REV=${PGGL_GRAPH_REV:-$(git -C "$HERE" rev-parse --short HEAD 2>/dev/null || echo unknown)}
 log() { echo "$*" | tee -a "$LOG"; }
 record() {  # record <id> <name> <status> <detail>
@@ -160,8 +160,8 @@ if [ -n "$g" ]; then
     gbz=$(var "$g" gbz)
     # simulate from chr20 when there is one: mid-sized, and present in every
     # human graph; otherwise from the first reference path
-    src=$(cut -f1 "$W/ref-paths.tsv" 2>/dev/null | grep -m1 "#chr20\b" \
-          || cut -f1 "$W/ref-paths.tsv" 2>/dev/null | head -1)
+    src=$(awk -F'\t' '$1 ~ /#chr20(\[|$)/ {print $1; exit}' "$W/ref-paths.tsv" 2>/dev/null)
+    [ -n "$src" ] || src=$(awk -F'\t' 'NR == 1 {print $1}' "$W/ref-paths.tsv" 2>/dev/null)
     cut -f1 "$W/ref-paths.tsv" > "$W/plain-ref-paths.txt" 2>/dev/null
     if [ -z "$src" ]; then
         record 5a surject fail "no reference path to simulate from (see check 1)"

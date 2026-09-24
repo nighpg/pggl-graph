@@ -22,7 +22,7 @@ set -euo pipefail
 BUNDLE=""
 DEST=""
 VERIFY=0
-THREADS=${THREADS:-16}
+THREADS=${THREADS:-$(nproc)}  # the CPUs this job was given; srun -c sets them
 WORKDIR=""
 
 usage() { awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "${BASH_SOURCE[0]}"
@@ -64,7 +64,11 @@ fi
 log "3. images and reference"
 cp -f "$BUNDLE"/sif/*.sif "$R/"
 cactus_sif=$(ls "$R"/cactus_v*.sif | sort -V | tail -1)
-vg_sif=$(ls "$R"/*.sif | grep -v '/cactus_v' | head -1)
+vg_sif=""
+for f in "$R"/*.sif; do
+    case $f in */cactus_v*) ;; *) vg_sif=$f; break ;; esac
+done
+[ -n "$vg_sif" ] || { echo "setup-offline.sh: no vg SIF in the bundle" >&2; exit 1; }
 mkdir -p "$DEST/reference"
 if ls "$BUNDLE"/reference/* >/dev/null 2>&1; then
     cp -f "$BUNDLE"/reference/* "$DEST/reference/"
@@ -82,13 +86,15 @@ cat "$R/offline.env"
 AP=${APPTAINER:-$(command -v apptainer || command -v singularity || ls -d /opt/pkg/apptainer/*/bin/apptainer 2>/dev/null | sort -V | tail -1)}
 [ -x "$AP" ] || { echo "setup-offline.sh: apptainer not found; set APPTAINER" >&2; exit 1; }
 "$AP" exec "$cactus_sif" cactus-pangenome --help > /dev/null
-"$AP" exec "$vg_sif" vg version | head -1
+vg_out=$("$AP" exec "$vg_sif" vg version)
+echo "${vg_out%%$'\n'*}"
 
 if [ "$VERIFY" -eq 1 ]; then
     if [ -z "$WORKDIR" ]; then
         if [ -d /scratch ]; then WORKDIR=/scratch/$USER/pggl-graph-toy; else WORKDIR=$(mktemp -d); fi
     fi
     log "5. toy build in $WORKDIR (TOY_MODE=check, $THREADS threads)"
+    [ "$THREADS" -ge 4 ] || log "   only $THREADS CPU(s): this works but is slow; use srun -c 16"
     rc=0
     APPTAINER=$AP TOY_MODE=check THREADS=$THREADS \
         bash "$R/tests/toy/build.sh" "$cactus_sif" "$vg_sif" "$WORKDIR" || rc=$?
