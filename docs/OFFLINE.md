@@ -224,6 +224,15 @@ Options worth knowing (`scripts/submit-staged.sh --help` has them all):
   commands refuse it), so the pilot's bin stage still maps every assembly but
   bins only chr21. Give the pilot its own `--name` and `--out`: its bin stage
   cannot be reused for the whole genome.
+- `export MAP_SHARDS=3` runs the bin stage's `cactus-graphmap` as three parts
+  at once, each with its own Toil. One Toil maps only about RAM / (72 x
+  assembly size) assemblies at a time, 7 on a 1.5 TB node, because Cactus
+  reserves some 210 GB for each human haplotype and minigraph uses about 50.
+  With 738 haplotypes, one Toil needed about 30 h. Size the parts by memory
+  actually used: parts x (THREADS / parts / 6) x 50 GB must fit the job.
+  Setting `MEM` above the job's memory does not help: Toil caps it at the
+  machine's RAM. On the toy the parts give the same per-chromosome inputs as
+  one run, and the release is byte-identical.
 - `--from chrom|join|index` resumes the chain at a stage. A failed stage
   leaves the later jobs pending with `DependencyNeverSatisfied`: `scancel`
   them, fix the cause, and resubmit with `--from <failed stage>`. Steps that
