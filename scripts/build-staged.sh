@@ -26,7 +26,11 @@
 #
 # Environment: as build-release.sh (CACTUS_SIF, VG_SIF, THREADS, MEM,
 # WORKROOT, REF_CONTIGS, RELEASE_LABEL, SITE, SITE_ROOT, BUILD_NOTE), plus
-#   CACTUS_EXTRA  extra options for every Cactus command of the stage
+#   CACTUS_EXTRA  extra options for every Cactus command of the stage, except
+#                 --refContigs and --refContigsFile, which only
+#                 cactus-graphmap-split takes and so only it is given: a pilot
+#                 on one chromosome is CACTUS_EXTRA='--refContigs chr21', as
+#                 with build-release.sh
 #
 # Every Cactus step runs Toil on this node only, with its own job store under
 # WORKROOT, and is skipped when its output exists. A failed step reruns from
@@ -53,6 +57,29 @@ SCRIPT="build-staged.sh $STAGE"
 . "$HERE/lib/build-common.sh"
 C=$OUT/cactus
 
+# CACTUS_EXTRA split in two: the reference-contig subset goes to
+# cactus-graphmap-split alone (cactus-minigraph and the rest refuse it; the
+# chromosomes it leaves out are never binned, so no later step sees them)
+EXTRA=() SPLIT_EXTRA=()
+read -ra words <<< "${CACTUS_EXTRA:-}"
+i=0
+while [ "$i" -lt "${#words[@]}" ]; do
+    w=${words[$i]}
+    case $w in
+        --refContigs=*|--refContigsFile=*) SPLIT_EXTRA+=("$w") ;;
+        --refContigs)
+            SPLIT_EXTRA+=("$w")
+            while [ $((i + 1)) -lt "${#words[@]}" ] && [[ ${words[$((i + 1))]} != -* ]]; do
+                i=$((i + 1)); SPLIT_EXTRA+=("${words[$i]}")
+            done ;;
+        --refContigsFile)
+            SPLIT_EXTRA+=("$w")
+            if [ $((i + 1)) -lt "${#words[@]}" ]; then i=$((i + 1)); SPLIT_EXTRA+=("${words[$i]}"); fi ;;
+        *) EXTRA+=("$w") ;;
+    esac
+    i=$((i + 1))
+done
+
 log "build-staged.sh $STAGE $NAME${TASK:+ [task $TASK]}: $THREADS threads, $MEM, on $(hostname), work in $WORKROOT"
 
 # Runs one Cactus command with a fresh job store; skipped when $1 exists.
@@ -68,11 +95,10 @@ cactus_step() {
     rm -rf "$js"
     mkdir -p "$WORKROOT/js" "$OUT/logs/$STAGE"
     log "  $step: $1"
-    # shellcheck disable=SC2086
     "$AP" exec --cleanenv --bind "$(binds "$OUT" "$WORKROOT" "$INPUT_DIRS" "$REPO")" "$CACTUS_SIF" \
         "$1" "$js" "${@:2}" \
         --binariesMode local --maxCores "$THREADS" --maxMemory "$MEM" \
-        --workDir "$WORKROOT/toil" --logFile "$OUT/logs/$STAGE/$step.log" ${CACTUS_EXTRA:-}
+        --workDir "$WORKROOT/toil" --logFile "$OUT/logs/$STAGE/$step.log" ${EXTRA[@]+"${EXTRA[@]}"}
     [ -e "$done" ] || { echo "$SCRIPT: $step finished but $done is missing" >&2; exit 1; }
     rm -rf "$js"
 }
@@ -97,7 +123,7 @@ bin)
         --reference GRCh38 --mgSplit --outputFasta "$C/$NAME.sv.gfa.fa.gz"
     cactus_step "$C/chrom-subproblems/chromfile.txt" split \
         cactus-graphmap-split "$C/$NAME.seqfile.txt" "$C/$NAME.sv.gfa.gz" "$C/$NAME.paf" \
-        --outDir "$C/chrom-subproblems" --reference GRCh38 --mgSplit
+        --outDir "$C/chrom-subproblems" --reference GRCh38 --mgSplit ${SPLIT_EXTRA[@]+"${SPLIT_EXTRA[@]}"}
     # largest first, by the size of each chromosome's binned input, so that
     # the long tasks start first and the array ends sooner
     while IFS=$'\t' read -r chrom _; do

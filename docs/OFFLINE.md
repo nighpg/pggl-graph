@@ -220,6 +220,10 @@ Options worth knowing (`scripts/submit-staged.sh --help` has them all):
   for others.
 - `--tasks N` is the array size (default 25). Tasks without a chromosome exit
   at once, so a pilot with `CACTUS_EXTRA='--refContigs chr21'` needs no change.
+  The contig subset goes to `cactus-graphmap-split` only (the other Cactus
+  commands refuse it), so the pilot's bin stage still maps every assembly but
+  bins only chr21. Give the pilot its own `--name` and `--out`: its bin stage
+  cannot be reused for the whole genome.
 - `--from chrom|join|index` resumes the chain at a stage. A failed stage
   leaves the later jobs pending with `DependencyNeverSatisfied`: `scancel`
   them, fix the cause, and resubmit with `--from <failed stage>`. Steps that
