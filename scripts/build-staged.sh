@@ -99,7 +99,12 @@ cactus_step() {
     rm -rf "$js"
     mkdir -p "$WORKROOT/js" "$OUT/logs/$STAGE"
     log "  $step: $1"
-    "$AP" exec --cleanenv --bind "$(binds "$OUT" "$WORKROOT" "$INPUT_DIRS" "$REPO")" "$CACTUS_SIF" \
+    # TOIL_HISTORY=False: Toil records every workflow in ~/.toil/history.sqlite,
+    # one file for all the tasks of the build. SQLite locking fails on Lustre:
+    # of 18 chromosome tasks that started in the same second, four died at once
+    # with "sqlite3.OperationalError: disk I/O error". Nothing reads the history
+    "$AP" exec --cleanenv --env TOIL_HISTORY=False \
+        --bind "$(binds "$OUT" "$WORKROOT" "$INPUT_DIRS" "$REPO")" "$CACTUS_SIF" \
         "$1" "$js" "${@:2}" \
         --binariesMode local --maxCores "$THREADS" --maxMemory "$MEM" \
         --workDir "$WORKROOT/toil" --logFile "$OUT/logs/$STAGE/$step.log" ${EXTRA[@]+"${EXTRA[@]}"}

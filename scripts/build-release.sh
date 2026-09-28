@@ -70,7 +70,9 @@ else
         log "cactus-pangenome"
     fi
     # shellcheck disable=SC2086
-    "$AP" exec --cleanenv --bind "$(binds "$OUT" "$WORKROOT" "$(dirname "$JOBSTORE")" "$INPUT_DIRS")" "$CACTUS_SIF" \
+    # TOIL_HISTORY=False: Toil's ~/.toil/history.sqlite fails on Lustre (see build-staged.sh)
+    "$AP" exec --cleanenv --env TOIL_HISTORY=False \
+        --bind "$(binds "$OUT" "$WORKROOT" "$(dirname "$JOBSTORE")" "$INPUT_DIRS")" "$CACTUS_SIF" \
         cactus-pangenome "$JOBSTORE" "$OUT/cactus.seqfile.txt" \
         --outDir "$OUT/cactus" --outName "$NAME" "${CACTUS_OPTS[@]}" \
         --binariesMode local --maxCores "$THREADS" --maxMemory "$MEM" \
