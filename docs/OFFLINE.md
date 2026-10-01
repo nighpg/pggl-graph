@@ -233,6 +233,13 @@ Options worth knowing (`scripts/submit-staged.sh --help` has them all):
   Setting `MEM` above the job's memory does not help: Toil caps it at the
   machine's RAM. On the toy the parts give the same per-chromosome inputs as
   one run, and the release is byte-identical.
+- `export CHROM_UNTIL=graphmap` makes each chromosome task stop after
+  graphmap. Construction and graphmap need little (chr13 with 738
+  haplotypes: 13 h and 15 h, about 10 GB, on 8 cores), while align needs a
+  big node (`cactus_consolidated` 191 GiB on 32 cores, then `hal2vg` on one
+  core for hours). Run the chromosomes with `CHROM_UNTIL=graphmap` on small
+  allocations, then submit each one again without it on a big one as its
+  graphmap finishes: the finished steps are skipped.
 - `--from chrom|join|index` resumes the chain at a stage. A failed stage
   leaves the later jobs pending with `DependencyNeverSatisfied`: `scancel`
   them, fix the cause, and resubmit with `--from <failed stage>`. Steps that

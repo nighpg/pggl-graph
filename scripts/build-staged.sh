@@ -35,6 +35,12 @@
 #                 (default 1). One Toil maps only about RAM / (72 x assembly
 #                 size) assemblies at a time -- 7 on a 1.5 TB node -- while
 #                 minigraph uses a quarter of that; see map_parts below
+#   CHROM_UNTIL   chrom stage: stop after this step, minigraph or graphmap
+#                 (default: run through align). Construction and graphmap
+#                 take days on a few cores and ~10 GB; align takes hundreds of
+#                 GB (chr13, 738 haplotypes: 191 GiB). Run the task with
+#                 CHROM_UNTIL=graphmap on a small allocation, then again
+#                 without it on a big one: the finished steps are skipped
 #
 # Every Cactus step runs Toil on this node only, with its own job store under
 # WORKROOT, and is skipped when its output exists. A failed step reruns from
@@ -213,6 +219,10 @@ chrom)
         log "task $TASK: only $(wc -l < "$C/chroms.txt") chromosomes; nothing to do"
         exit 0
     fi
+    case ${CHROM_UNTIL:-align} in
+        minigraph|graphmap|align) ;;
+        *) echo "$SCRIPT: CHROM_UNTIL=$CHROM_UNTIL: expected minigraph, graphmap or align" >&2; exit 2 ;;
+    esac
     INPUT_DIRS=""
     D=$C/chroms/$chrom
     mkdir -p "$D"
@@ -223,8 +233,16 @@ chrom)
     cactus_step "$D/minigraph/chromfile.mg.txt" "minigraph-$chrom" \
         cactus-minigraph "$D/chromfile.txt" "$D/minigraph" --batch --reference GRCh38 \
         --mgCores "$THREADS" --mgMemory "$MEM"
+    if [ "${CHROM_UNTIL:-}" = minigraph ]; then
+        log "chrom $chrom: stopping after minigraph (CHROM_UNTIL=minigraph)"
+        exit 0
+    fi
     cactus_step "$D/graphmap/chromfile.gm.txt" "graphmap-$chrom" \
         cactus-graphmap "$D/minigraph/chromfile.mg.txt" "$D/graphmap" --batch --reference GRCh38
+    if [ "${CHROM_UNTIL:-}" = graphmap ]; then
+        log "chrom $chrom: stopping after graphmap (CHROM_UNTIL=graphmap)"
+        exit 0
+    fi
     cactus_step "$D/align/$chrom.hal" "align-$chrom" \
         cactus-align "$D/graphmap/chromfile.gm.txt" "$D/align" --batch --pangenome \
         --reference GRCh38 --outVG --consCores "$THREADS" --consMemory "$MEM"
