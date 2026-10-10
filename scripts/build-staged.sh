@@ -43,8 +43,11 @@
 #                 without it on a big one: the finished steps are skipped
 #
 # Every Cactus step runs Toil on this node only, with its own job store under
-# WORKROOT, and is skipped when its output exists. A failed step reruns from
-# its own start: resubmitting the stage (or the whole chain) resumes there.
+# WORKROOT, and is skipped when its output exists. A step whose job store was
+# left behind -- killed at its time limit, cancelled, failed -- is resumed from
+# it with Toil's --restart, on any node: the Toil jobs that finished are kept
+# (for a chromosome's construction, every finished batch of 50 haplotypes).
+# CACTUS_FRESH=1 discards the job store and starts the step over instead.
 #
 # Layout, all under <outdir> (shared by every node):
 #   cactus/<name>.input-contig-sizes.tsv.gz, <name>.sv.gfa.gz, <name>.paf,
@@ -101,17 +104,27 @@ cactus_step() {
         log "  $step: done already"
         return 0
     fi
-    local js=$WORKROOT/js/$step
-    rm -rf "$js"
+    local js=$WORKROOT/js/$step restart=()
+    # a job store whose workflow had started (Toil wrote its root job) is
+    # resumed; anything less is a start that never got going
+    if [ -s "$js/shared/rootJobStoreID" ] && [ "${CACTUS_FRESH:-0}" != 1 ]; then
+        restart=(--restart)
+    else
+        rm -rf "$js"
+    fi
     mkdir -p "$WORKROOT/js" "$OUT/logs/$STAGE"
-    log "  $step: $1"
+    if [ ${#restart[@]} -gt 0 ]; then
+        log "  $step: $1 --restart (resuming the job store left by an earlier run)"
+    else
+        log "  $step: $1"
+    fi
     # TOIL_HISTORY=False: Toil records every workflow in ~/.toil/history.sqlite,
     # one file for all the tasks of the build. SQLite locking fails on Lustre:
     # of 18 chromosome tasks that started in the same second, four died at once
     # with "sqlite3.OperationalError: disk I/O error". Nothing reads the history
     "$AP" exec --cleanenv --env TOIL_HISTORY=False \
         --bind "$(binds "$OUT" "$WORKROOT" "$INPUT_DIRS" "$REPO")" "$CACTUS_SIF" \
-        "$1" "$js" "${@:2}" \
+        "$1" "$js" "${@:2}" ${restart[@]+"${restart[@]}"} \
         --binariesMode local --maxCores "$THREADS" --maxMemory "$MEM" \
         --workDir "$WORKROOT/toil" --logFile "$OUT/logs/$STAGE/$step.log" ${EXTRA[@]+"${EXTRA[@]}"}
     [ -e "$done" ] || { echo "$SCRIPT: $step finished but $done is missing" >&2; exit 1; }
