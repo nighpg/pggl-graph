@@ -220,6 +220,26 @@ Options worth knowing (`scripts/submit-staged.sh --help` has them all):
   for others.
 - `--tasks N` is the array size (default 25). Tasks without a chromosome exit
   at once, so a pilot with `CACTUS_EXTRA='--refContigs chr21'` needs no change.
+  The contig subset goes to `cactus-graphmap-split` only (the other Cactus
+  commands refuse it), so the pilot's bin stage still maps every assembly but
+  bins only chr21. Give the pilot its own `--name` and `--out`: its bin stage
+  cannot be reused for the whole genome.
+- `export MAP_SHARDS=3` runs the bin stage's `cactus-graphmap` as three parts
+  at once, each with its own Toil. One Toil maps only about RAM / (72 x
+  assembly size) assemblies at a time, 7 on a 1.5 TB node, because Cactus
+  reserves some 210 GB for each human haplotype and minigraph uses about 50.
+  With 738 haplotypes, one Toil needed about 30 h. Size the parts by memory
+  actually used: parts x (THREADS / parts / 6) x 50 GB must fit the job.
+  Setting `MEM` above the job's memory does not help: Toil caps it at the
+  machine's RAM. On the toy the parts give the same per-chromosome inputs as
+  one run, and the release is byte-identical.
+- `export CHROM_UNTIL=graphmap` makes each chromosome task stop after
+  graphmap. Construction and graphmap need little (chr13 with 738
+  haplotypes: 13 h and 15 h, about 10 GB, on 8 cores), while align needs a
+  big node (`cactus_consolidated` 191 GiB on 32 cores, then `hal2vg` on one
+  core for hours). Run the chromosomes with `CHROM_UNTIL=graphmap` on small
+  allocations, then submit each one again without it on a big one as its
+  graphmap finishes: the finished steps are skipped.
 - `--from chrom|join|index` resumes the chain at a stage. A failed stage
   leaves the later jobs pending with `DependencyNeverSatisfied`: `scancel`
   them, fix the cause, and resubmit with `--from <failed stage>`. Steps that
